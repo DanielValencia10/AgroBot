@@ -1,0 +1,2 @@
+# Sin dependencias externas definidas aun. Se agregaran aqui cuando el equipo
+# decida la libreria de GUI y, de ser el caso, el framework de pruebas.
