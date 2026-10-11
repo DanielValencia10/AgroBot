@@ -32,11 +32,21 @@ Contrato previsto:
       retorna si el estado candidato debe descartarse por repetir un estado previo en
       la rama, considerando las excepciones (avioneta, cultivo seco con fertilizante,
       deposito).
+Decision de equipo (antes PENDIENTE):
+    - "Es el mismo estado" significa igualdad de la tupla completa (f, c, phi, e, k, P),
+      igual que la clave de visitados de la Demo.
+    - Con esa definicion las tres excepciones se cumplen solas: volver a la avioneta, a
+      un cultivo seco con fertilizante o al deposito CAMBIA e/k, P o phi, asi que el
+      estado resultante es distinto y no cuenta como repetido. Solo se descarta un paso
+      que deja TODO igual que un estado anterior de la rama.
 PENDIENTE:
-    - Que componentes exactos del estado se comparan para decidir "es el mismo estado"
-      (¿se compara la tupla completa (f,c,phi,e,k,P), o solo un subconjunto como la
-      posicion?).
-    - Como se aplica exactamente la excepcion: ¿se permite repetir SOLO la posicion
-      (f,c) cuando corresponde a avioneta/cultivo con fertilizante/deposito, o se
-      excluye la comparacion de ciclos por completo para esos pasos?
+    - El parametro `mundo` queda en el contrato por si el equipo cambia la comparacion
+      (por ejemplo, solo posicion con excepciones explicitas); hoy no se usa.
 """
+from __future__ import annotations
+
+
+def es_repetido_en_rama(estado_candidato, camino_de_estados_en_la_rama, mundo=None) -> bool:
+    """True si el candidato repite un estado de la rama (cualquier contenedor con `in`)."""
+    return estado_candidato in camino_de_estados_en_la_rama
+

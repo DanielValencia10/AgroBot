@@ -45,8 +45,38 @@ Contrato previsto:
         - sucesores(estado, camino_de_la_rama): retorna la lista de tuplas
           (movimiento, estado_sucesor, costo_del_paso) validas desde el estado dado,
           ya filtradas por precondicion, efectos y control de ciclos.
-PENDIENTE:
-    - Si la generacion de sucesores recibe el camino completo de la rama (para
-      ciclos.py) o una estructura mas liviana (por ejemplo, un conjunto de estados
-      visitados en la rama); esto depende de la decision tomada en ciclos.py.
+Decision de equipo (antes PENDIENTE):
+    - `camino_de_la_rama` puede ser cualquier contenedor de Estado que acepte `in`
+      (lista del camino, o un conjunto de la rama si el algoritmo lo prefiere).
+    - Los sucesores salen en el orden de modelo/movimiento.py.
 """
+from __future__ import annotations
+
+from ..modelo.estado import construir_estado_inicial
+from ..modelo.movimiento import Movimiento
+from . import ciclos, costos, operadores
+
+
+class AgroBotProblema:
+    def __init__(self, mundo):
+        self.mundo = mundo
+
+    def estado_inicial(self):
+        return construir_estado_inicial(self.mundo)
+
+    def es_meta(self, estado) -> bool:
+        return len(estado.pendientes) == 0
+
+    def sucesores(self, estado, camino_de_la_rama=()) -> list:
+        """Lista de (movimiento, estado_sucesor, costo_del_paso) validos desde `estado`."""
+        resultado = []
+        for movimiento in Movimiento:
+            if not operadores.es_aplicable(self.mundo, estado, movimiento):
+                continue
+            siguiente = operadores.aplicar(self.mundo, estado, movimiento)
+            if ciclos.es_repetido_en_rama(siguiente, camino_de_la_rama, self.mundo):
+                continue
+            resultado.append((movimiento, siguiente,
+                              costos.costo_de_movimiento(estado, movimiento)))
+        return resultado
+

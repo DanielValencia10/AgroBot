@@ -31,11 +31,23 @@ Contrato previsto:
     - costo_de_movimiento(estado_antes_de_moverse, movimiento): retorna el costo
       numerico (1 o 1/2) del paso, segun si el robot viaja en avioneta con combustible
       en el momento de iniciar el movimiento.
-PENDIENTE:
-    - Costo exacto del movimiento que sube a la avioneta (¿cuenta como paso normal de
-      costo 1 porque todavia no esta "en vuelo", o ya cuenta como 1/2?).
-    - Costo exacto del movimiento que gasta la ultima unidad de combustible (¿se cobra
-      a 1/2 por iniciarse con combustible, aunque termine en e=falso?).
-    - Representacion numerica de los costos (float, fraccion exacta, o escala entera
-      x2 para evitar errores de punto flotante al comparar/acumular costos).
+Decisiones de equipo (antes PENDIENTE):
+    - El movimiento que sube a la avioneta cuesta 1: al iniciarlo el robot aun va a pie
+      (e=falso), y el costo depende solo de (e, k) ANTES de moverse.
+    - El movimiento que gasta la ultima unidad de combustible cuesta 1/2: se inicia con
+      e=verdadero y k=1, aunque termine en e=falso.
+    - Los costos son float. 1 y 1/2 son exactos en binario, y toda suma de multiplos de
+      1/2 tambien lo es, asi que comparar y acumular costos no pierde precision.
 """
+from __future__ import annotations
+
+COSTO_A_PIE = 1.0
+COSTO_EN_AVIONETA = 0.5
+
+
+def costo_de_movimiento(estado_antes_de_moverse, movimiento) -> float:
+    """Costo del paso: 1/2 si va en avioneta con combustible, 1 en cualquier otro caso."""
+    if estado_antes_de_moverse.en_avioneta and estado_antes_de_moverse.combustible > 0:
+        return COSTO_EN_AVIONETA
+    return COSTO_A_PIE
+
