@@ -27,3 +27,13 @@ Contrato previsto:
     - COMBUSTIBLE_INICIAL_AVIONETA: entero, combustible con el que inicia la avioneta (30).
     - TAMANO_CUADRICULA: entero, numero de filas y de columnas de la cuadricula (10).
 """
+CODIGO_LIBRE = 0
+CODIGO_OBSTACULO = 1
+CODIGO_AGROBOT = 2
+CODIGO_CULTIVO_SECO = 3
+CODIGO_DEPOSITO = 4
+CODIGO_AVIONETA = 5
+
+CAPACIDAD_FERTILIZANTE = 2
+COMBUSTIBLE_INICIAL_AVIONETA = 30
+TAMANO_CUADRICULA = 10

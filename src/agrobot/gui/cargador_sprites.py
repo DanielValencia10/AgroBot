@@ -20,8 +20,8 @@ Responsabilidad:
           imagenes.
         - No lo usa ningun archivo fuera de gui/ (es el unico que conoce assets/).
 Importa de:
+    - constantes: codigos de celda (CODIGO_*) usados al mapear codigo -> nombre de sprite.
     - pygame (pygame-ce).
-    - (constantes.py, cuando defina los CODIGO_*: hoy los codigos 0 a 5 van literales).
 Lo importan:
     - gui/panel_mundo.py (dibujo base de la cuadricula).
     - gui/animacion.py (cuadros de caminata, giro, helice y crecimiento de la planta).
@@ -48,6 +48,8 @@ from pathlib import Path
 
 import pygame
 
+from .. import constantes
+
 RAIZ_SPRITES = Path(__file__).resolve().parents[3] / "assets" / "sprites"
 
 DIRECCIONES_CARDINALES = ("n", "e", "s", "o")
@@ -57,16 +59,13 @@ ANILLO_DIRECCIONES = ("n", "ne", "e", "se", "s", "so", "o", "no")
 CUADROS_POR_DIRECCION = 3
 CUADROS_CULTIVO = 9
 
-# Codigos de celda del archivo de mundo (ver constantes.py, aun sin implementar):
-# 0 libre, 1 obstaculo, 2 AgroBot, 3 cultivo seco, 4 deposito, 5 avioneta.
-# TODO: usar los CODIGO_* de constantes.py cuando ese archivo los defina.
 _NOMBRE_POR_CODIGO = {
-    0: "casilla_libre",
-    1: "obstaculo",
-    2: "robot",
-    3: "cultivo",
-    4: "deposito",
-    5: "avioneta_base",
+    constantes.CODIGO_LIBRE: "casilla_libre",
+    constantes.CODIGO_OBSTACULO: "obstaculo",
+    constantes.CODIGO_AGROBOT: "robot",
+    constantes.CODIGO_CULTIVO_SECO: "cultivo",
+    constantes.CODIGO_DEPOSITO: "deposito",
+    constantes.CODIGO_AVIONETA: "avioneta_base",
 }
 
 

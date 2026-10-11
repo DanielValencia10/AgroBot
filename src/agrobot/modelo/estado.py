@@ -34,21 +34,61 @@ Lo importan:
     - modelo/mundo.py no lo importa (mundo.py es la parte constante, estado.py es la
       parte dinamica); problema/agrobot_problema.py, problema/operadores.py,
       problema/costos.py, problema/ciclos.py, busqueda/nodo.py (cada nodo envuelve un
-      Estado), archivos/lector_mundo.py (para construir el estado inicial),
+      Estado),
       gui/panel_mundo.py y gui/animacion.py (para dibujar cada estado del camino).
 Contrato previsto:
     - Estado: clase inmutable con los seis componentes (f, c, phi, e, k, P). Expone
       igualdad y hash basados en el valor de sus componentes (P como estructura
       inmutable/ordenable para poder hashear), de modo que dos estados con los mismos
       valores sean considerados el mismo estado.
-    - construir_estado_inicial(...)  [o equivalente]: documentar que a partir de los
-      datos fijos del Mundo (posicion inicial del robot y cultivos secos iniciales) se
-      arma el Estado inicial con phi=CAPACIDAD_FERTILIZANTE, e=falso,
-      k=COMBUSTIBLE_INICIAL_AVIONETA y P = conjunto de cultivos secos iniciales.
-      (La decision de en que archivo vive exactamente esta construccion -aqui o en
-      agrobot_problema.py- se deja abierta, ver PENDIENTE).
-PENDIENTE:
-    - Definir si la construccion del estado inicial completo vive en estado.py o se
-      delega enteramente a problema/agrobot_problema.py (estado.py solo definiria la
-      clase Estado).
+    - construir_estado_inicial(mundo): a partir de los datos fijos del Mundo arma el
+      Estado inicial con phi=0 (el robot arranca SIN fertilizante y lo consigue en el
+      deposito), e=falso, k=COMBUSTIBLE_INICIAL_AVIONETA y P = cultivos secos iniciales.
+Decisiones de equipo (antes PENDIENTE):
+    - El Estado inicial se construye aqui (construir_estado_inicial); agrobot_problema.py
+      solo lo llama.
+    - El robot empieza con fertilizante 0, no con CAPACIDAD_FERTILIZANTE.
 """
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from .. import constantes
+
+
+@dataclass(frozen=True)
+class Estado:
+    fila: int
+    columna: int
+    fertilizante: int        # phi: 0 a CAPACIDAD_FERTILIZANTE
+    en_avioneta: bool        # e
+    combustible: int         # k: 0 a COMBUSTIBLE_INICIAL_AVIONETA
+    pendientes: frozenset    # P: coordenadas (fila, columna) de cultivos secos sin tratar
+
+    @property
+    def posicion(self) -> tuple:
+        return (self.fila, self.columna)
+
+    def describir(self) -> str:
+        """Texto corto del estado, para depurar o mostrar en consola."""
+        return (
+            "pos=" + str(self.posicion)
+            + " fert=" + str(self.fertilizante)
+            + " cultivos_faltan=" + str(len(self.pendientes))
+            + " avioneta=" + ("si" if self.en_avioneta else "no")
+            + " comb=" + str(self.combustible)
+        )
+
+
+def construir_estado_inicial(mundo) -> Estado:
+    """Estado con el que arranca la busqueda sobre `mundo` (un modelo.mundo.Mundo)."""
+    fila, columna = mundo.posicion_robot
+    return Estado(
+        fila=fila,
+        columna=columna,
+        fertilizante=0,
+        en_avioneta=False,
+        combustible=constantes.COMBUSTIBLE_INICIAL_AVIONETA,
+        pendientes=frozenset(mundo.cultivos_secos),
+    )
+

@@ -27,7 +27,31 @@ Contrato previsto:
     - Movimiento: enumeracion con los cuatro valores ARRIBA, ABAJO, IZQUIERDA, DERECHA.
     - obtener_desplazamiento(movimiento): recibe un Movimiento y retorna el par
       (delta_fila, delta_columna) correspondiente.
-PENDIENTE:
-    - Orden en que se consideran los operadores/movimientos al generar sucesores
-      (afecta el desempate y el orden de expansion en los algoritmos de busqueda).
+Decision de equipo (antes PENDIENTE):
+    - Orden de los movimientos al generar sucesores: ARRIBA, ABAJO, IZQUIERDA, DERECHA
+      (el orden de definicion del enum; afecta el desempate y el orden de expansion).
 """
+from __future__ import annotations
+
+from enum import Enum
+
+
+class Movimiento(Enum):
+    ARRIBA = "arriba"
+    ABAJO = "abajo"
+    IZQUIERDA = "izquierda"
+    DERECHA = "derecha"
+
+
+_DESPLAZAMIENTOS = {
+    Movimiento.ARRIBA: (-1, 0),
+    Movimiento.ABAJO: (1, 0),
+    Movimiento.IZQUIERDA: (0, -1),
+    Movimiento.DERECHA: (0, 1),
+}
+
+
+def obtener_desplazamiento(movimiento: Movimiento) -> tuple:
+    """Retorna (delta_fila, delta_columna) del movimiento (la fila 0 esta arriba)."""
+    return _DESPLAZAMIENTOS[movimiento]
+

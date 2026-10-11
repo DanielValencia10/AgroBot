@@ -38,4 +38,29 @@ Contrato previsto:
       corresponde a una casilla obstaculo.
     - esta_dentro_de_cuadricula(coordenada): recibe una coordenada (fila, columna) y
       retorna si esta dentro del rango valido de la cuadricula 10x10.
+    - Atributos de solo lectura: obstaculos (frozenset), deposito, avioneta,
+      posicion_robot (posicion inicial) y cultivos_secos (frozenset, los iniciales).
 """
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from .. import constantes
+
+
+@dataclass(frozen=True)
+class Mundo:
+    obstaculos: frozenset
+    deposito: tuple
+    avioneta: tuple
+    posicion_robot: tuple
+    cultivos_secos: frozenset
+
+    def es_obstaculo(self, coordenada) -> bool:
+        return coordenada in self.obstaculos
+
+    def esta_dentro_de_cuadricula(self, coordenada) -> bool:
+        fila, columna = coordenada
+        limite = constantes.TAMANO_CUADRICULA
+        return 0 <= fila < limite and 0 <= columna < limite
+
