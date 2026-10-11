@@ -15,8 +15,9 @@ Importa de:
     - modelo.mundo (Mundo): para conocer los elementos fijos del mundo a dibujar.
     - constantes: para los codigos de celda usados al decidir como dibujar cada
       casilla.
-    - gui.cargador_sprites: para obtener la imagen correspondiente a cada codigo de
-      celda (es el unico archivo que conoce la ruta de assets/sprites/).
+    - gui.cargador_sprites: Sprites.estatico(obtener_nombre_sprite_por_codigo(codigo))
+      da la imagen de cada codigo de celda (es el unico archivo que conoce la ruta de
+      assets/sprites/).
 Lo importan:
     - gui/ventana_principal.py (lo integra como uno de sus paneles).
     - gui/animacion.py (puede reutilizar el dibujo base de la cuadricula antes de
