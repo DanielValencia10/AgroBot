@@ -43,8 +43,8 @@ Contrato previsto:
       solucion solo muestra el estado inicial.
         - update(dt_ms) y dibujar(pantalla): avanzar el reloj y pintar el cuadro actual.
         - alternar_pausa(), paso_siguiente(), reiniciar(), ajustar_velocidad(factor).
-        - paso, total_pasos, terminada, pausada, estado_actual, direccion_actual y
-          en_movimiento: lo que la ventana necesita para sincronizar el arbol y el
+        - paso, total_pasos, terminada, pausada, camino_de_estados, estado_actual,
+          direccion_actual y en_movimiento: lo que la ventana necesita para sincronizar el arbol y el
           reporte. `paso` solo aumenta cuando el robot LLEGA a la siguiente casilla.
 Decisiones de equipo (antes PENDIENTE):
     - Reproduccion automatica y paso a paso: en automatico los pasos se encadenan; con
@@ -196,6 +196,11 @@ class PanelAnimacion:
     @property
     def terminada(self) -> bool:
         return self.paso >= self.total_pasos
+
+    @property
+    def camino_de_estados(self) -> tuple:
+        """Estados que recorre la reproduccion (solo el inicial si no hay solucion)."""
+        return self._estados
 
     @property
     def estado_actual(self):

@@ -5,28 +5,27 @@ Objetivo:      Punto de entrada de la aplicacion AgroBot: crear la interfaz graf
                archivos y gui).
 Responsabilidad:
     SI hace:
-        - Orquestar el flujo de la aplicacion: ventana -> pantallas de inicio
-          (bienvenida y seleccion de mundo y algoritmo) -> etapa siguiente.
+        - Orquestar el flujo completo: ventana -> bienvenida -> seleccion de mundo y
+          algoritmo -> busqueda -> ventana principal (animacion, arbol y reporte) -> de
+          vuelta a la seleccion, hasta que el usuario cierre la aplicacion.
+        - Mostrar un aviso (y volver a la seleccion) si el mundo no es valido o el
+          algoritmo elegido aun no esta implementado.
         - Ser el unico archivo del proyecto que puede importar de todos los paquetes
           (modelo/, problema/, busqueda/ y gui/), ya que su rol es de composicion.
     NO hace:
         - No implementa logica propia de dominio, busqueda ni interfaz: delega todo en
           los paquetes correspondientes.
 Importa de:
-    - gui.pantalla_inicio (crear_ventana, ejecutar_inicio).
+    - archivos.lector_mundo (ErrorMundo).
+    - gui.pantalla_inicio, gui.panel_control, gui.ventana_principal, gui.pantalla_aviso.
 Lo importan:
     - (ninguno; es el punto de entrada del programa, se ejecuta directamente).
 Ejecucion:
     Desde la raiz del repositorio:   python ejecutar.py
     Desde la carpeta src/:           python -m agrobot.main
-Como conectar la siguiente etapa:
-    El flujo ya entrega la SeleccionInicio (mundo, tipo y algoritmo) a
-    _etapa_principal(). Cuando exista VentanaPrincipal, solo hay que reemplazar el
-    cuerpo de esa funcion; el resto del flujo no cambia.
-PENDIENTE:
-    - _etapa_principal(): cargar el mundo (archivos.lector_mundo), construir el
-      problema (problema.agrobot_problema), lanzar el algoritmo elegido y mostrar el
-      resultado con gui.ventana_principal.
+Contrato previsto:
+    - punto_de_entrada(): corre la aplicacion y retorna el codigo de salida (0 si todo
+      bien, 1 si falta pygame-ce).
 """
 from __future__ import annotations
 
@@ -34,13 +33,6 @@ import sys
 from pathlib import Path
 
 CARPETA_MUNDOS = Path(__file__).resolve().parents[2] / "mundos"
-
-
-def _etapa_principal(pantalla, seleccion) -> None:
-    """Etapa posterior a la seleccion. Aun sin implementar: solo informa lo elegido."""
-    print("Mundo:", seleccion.ruta_mundo)
-    print("Tipo:", seleccion.tipo.value)
-    print("Algoritmo:", seleccion.algoritmo.value)
 
 
 def punto_de_entrada() -> int:
@@ -55,17 +47,40 @@ def punto_de_entrada() -> int:
         )
         return 1
 
+    from .archivos.lector_mundo import ErrorMundo
+    from .gui.panel_control import (ALGORITMOS_DISPONIBLES, AlgoritmoNoDisponible,
+                                    ejecutar_seleccion)
+    from .gui.pantalla_aviso import mostrar_aviso
     from .gui.pantalla_inicio import crear_ventana, ejecutar_inicio
+    from .gui.ventana_principal import SALIR, VentanaPrincipal
 
     pantalla = crear_ventana()
     try:
-        seleccion = ejecutar_inicio(pantalla, CARPETA_MUNDOS)
-        if seleccion is None:  # el usuario cerro la ventana o pulso Esc
-            return 0
-        _etapa_principal(pantalla, seleccion)
+        saltar_bienvenida = False
+        while True:
+            seleccion = ejecutar_inicio(pantalla, CARPETA_MUNDOS, saltar_bienvenida)
+            if seleccion is None:  # el usuario cerro la ventana o pulso Esc
+                return 0
+            saltar_bienvenida = True  # al volver de la busqueda, directo a la seleccion
+
+            try:
+                ejecucion = ejecutar_seleccion(seleccion)
+            except ErrorMundo as error:
+                if not mostrar_aviso(pantalla, "No se pudo cargar el mundo", str(error)):
+                    return 0
+                continue
+            except AlgoritmoNoDisponible as error:
+                disponibles = ", ".join(a.value for a in ALGORITMOS_DISPONIBLES)
+                mensaje = (error.algoritmo.value + " todavía no está implementado. "
+                           "Por ahora puedes usar: " + disponibles + ".")
+                if not mostrar_aviso(pantalla, "Algoritmo no disponible", mensaje):
+                    return 0
+                continue
+
+            if VentanaPrincipal(pantalla, ejecucion).ejecutar(pantalla) == SALIR:
+                return 0
     finally:
         pygame.quit()
-    return 0
 
 
 if __name__ == "__main__":

@@ -8,10 +8,10 @@ tenga combustible, y recargando fertilizante en un deposito. El problema se
 resuelve con cinco algoritmos de busqueda: tres no informados (Amplitud,
 Costo uniforme, Profundidad evitando ciclos) y dos informados (Avara, A*).
 
-Este repositorio contiene por ahora solo el **esqueleto** del proyecto: la
-estructura de carpetas, los archivos vacios de logica (cada uno con su
-cabecera de documentacion) y la documentacion inicial. No hay implementacion
-todavia.
+Estado actual: funcionan la lectura y validacion de mundos, el problema (operadores,
+costos y control de ciclos), la busqueda en **Amplitud** y toda la interfaz (bienvenida,
+seleccion, animacion del camino, arbol de exploracion y reporte). Costo uniforme,
+Profundidad, Avara y A* aun no estan implementados: al elegirlos la aplicacion avisa.
 
 ## Instalacion del entorno
 
@@ -35,17 +35,28 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Para ver las pantallas de inicio (bienvenida y seleccion de mundo y algoritmo), con el
-entorno activado:
+## Ejecucion
+
+Con el entorno activo, desde la raiz del repositorio:
 
 ```
-cd src
-python -m agrobot.gui.pantalla_inicio
+python ejecutar.py
 ```
 
-Las pantallas de inicio usan las tipografias Pixelify Sans y DM Sans (gratuitas, de
-Google Fonts). Copia sus `.ttf` en `src/agrobot/gui/fuentes/` siguiendo el `LEEME.md` de
-esa carpeta; sin ellas la aplicacion funciona igual, pero con una letra del sistema.
+(tambien se puede, desde la carpeta `src/`: `python -m agrobot.main`). El flujo es:
+bienvenida -> seleccion de mundo y algoritmo -> ventana principal -> de vuelta a la
+seleccion. En la ventana principal: `Espacio` pausa, `Derecha` avanza un paso, `R`
+reinicia, `Arriba`/`Abajo` cambian la velocidad y `Esc` vuelve a la seleccion.
+
+Pruebas (desde la raiz, con el entorno activo):
+
+```
+python -m unittest tests.test_lector_mundo tests.test_operadores tests.test_algoritmos tests.test_sprites tests.test_panel_mundo tests.test_arbol_exploracion tests.test_animacion tests.test_flujo
+```
+
+Las tipografias Pixelify Sans y DM Sans (gratuitas, de Google Fonts) van en
+`src/agrobot/gui/fuentes/`, siguiendo el `LEEME.md` de esa carpeta; sin ellas la aplicacion
+funciona igual, pero con una letra del sistema.
 
 Si PowerShell no deja activar el entorno, ejecutar una vez
 `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. No instalar `pygame` y
@@ -105,6 +116,7 @@ agrobot/
 │       ├── animacion.py
 │       ├── panel_reporte.py
 │       ├── arbol_exploracion.py  (arbol de exploracion que se arma durante la animacion)
+│       ├── pantalla_aviso.py     (aviso: mundo invalido o algoritmo sin implementar)
 │       └── cargador_sprites.py  (unico archivo que lee assets/sprites/)
 └── tests/
     ├── test_lector_mundo.py
@@ -134,59 +146,34 @@ agrobot/
   paneles (`panel_mundo.py`, `animacion.py`) le piden los sprites por
   nombre en vez de leer la carpeta directamente.
 
-## Decisiones pendientes del equipo
+## Decisiones del equipo
 
-Estas son las decisiones marcadas como `PENDIENTE` en las cabeceras de los
-archivos de codigo, y en que archivo viven:
+Resueltas (quedaron documentadas en la cabecera del archivo que las aplica):
 
-- **Orden de los operadores/movimientos** al generar sucesores (afecta
-  desempates y orden de expansion):
-  - `src/agrobot/modelo/movimiento.py`
-  - `src/agrobot/problema/operadores.py`
-  - `src/agrobot/busqueda/no_informada/profundidad.py`
-- **Orden exacto de evaluacion de los efectos automaticos** cuando una misma
-  casilla pudiera activar mas de un efecto:
-  - `src/agrobot/problema/operadores.py`
-- **Costo exacto del movimiento que sube a la avioneta y del que gasta el
-  ultimo combustible**, y representacion numerica de los costos (float,
-  fraccion exacta, o escala entera):
-  - `src/agrobot/problema/costos.py`
-- **Que componentes del estado se comparan para el control de ciclos** y
-  **como se aplica exactamente la excepcion** (avioneta, cultivo seco con
-  fertilizante, deposito):
-  - `src/agrobot/problema/ciclos.py`
-- **Si la construccion del estado inicial completo vive en `estado.py` o se
-  delega a `agrobot_problema.py`**:
-  - `src/agrobot/modelo/estado.py`
-- **Si se recibe el camino completo de la rama o una estructura mas liviana**
-  para el control de ciclos al generar sucesores:
-  - `src/agrobot/problema/agrobot_problema.py`
-- **Criterios de desempate** en la frontera de cada algoritmo (Amplitud,
-  Costo uniforme, Profundidad, Avara, A*):
-  - `src/agrobot/busqueda/no_informada/amplitud.py`
-  - `src/agrobot/busqueda/no_informada/costo_uniforme.py`
-  - `src/agrobot/busqueda/no_informada/profundidad.py`
-  - `src/agrobot/busqueda/informada/avara.py`
-  - `src/agrobot/busqueda/informada/a_estrella.py`
-- **Si se necesita un limite de profundidad** para Profundidad (DFS):
-  - `src/agrobot/busqueda/no_informada/profundidad.py`
-- **Definicion de la heuristica** (y su justificacion de admisibilidad para
-  el informe):
-  - `src/agrobot/busqueda/informada/heuristica.py`
-- **Libreria de GUI a usar**:
-  - `src/agrobot/gui/ventana_principal.py`
-  - `src/agrobot/gui/panel_control.py`
-  - `src/agrobot/gui/panel_mundo.py`
-  - `src/agrobot/gui/animacion.py`
-  - `src/agrobot/gui/panel_reporte.py`
-- **Velocidad/control de reproduccion de la animacion**:
-  - `src/agrobot/gui/animacion.py`
-- **Tamano final en pixeles de cada sprite** (sugerido 64x64 px) y formato
-  concreto de carga de imagenes (depende de la libreria de GUI elegida):
-  - `src/agrobot/gui/cargador_sprites.py`
-  - `assets/README.md`
-- **Framework de pruebas a usar** (pytest o unittest):
-  - `tests/test_lector_mundo.py`
-  - `tests/test_operadores.py`
-  - `tests/test_heuristica.py`
-  - `tests/test_algoritmos.py`
+- Orden de los movimientos: arriba, abajo, izquierda, derecha (`modelo/movimiento.py`).
+- Orden de los efectos al entrar a una casilla: combustible, avioneta, deposito, cultivo
+  (`problema/operadores.py`).
+- Costos: el paso que sube a la avioneta cuesta 1 y el que gasta la ultima unidad de
+  combustible cuesta 1/2; se usan `float` (`problema/costos.py`).
+- Control de ciclos: se compara el estado completo y las excepciones se cumplen solas
+  (`problema/ciclos.py`).
+- El estado inicial se construye en `modelo/estado.py` y el robot arranca con 0 de
+  fertilizante.
+- Sucesores: `camino_de_la_rama` es cualquier contenedor de estados (`problema/agrobot_problema.py`).
+- Amplitud: desempate por orden de los sucesores, conjunto de estados generados global y
+  la meta tambien cuenta como nodo expandido (`busqueda/no_informada/amplitud.py`).
+- Libreria de GUI: pygame-ce. Velocidad de la animacion: 400 ms por casilla, con pausa,
+  paso a paso y cambio de velocidad (`gui/animacion.py`).
+- Sprites de 64 x 64 px cargados por `gui/cargador_sprites.py`. Pruebas con `unittest`.
+
+Pendientes (los algoritmos que faltan):
+
+- **Criterios de desempate** de Costo uniforme, Profundidad, Avara y A*:
+  `busqueda/no_informada/costo_uniforme.py`, `busqueda/no_informada/profundidad.py`,
+  `busqueda/informada/avara.py` y `busqueda/informada/a_estrella.py`.
+- **Orden de expansion y limite de profundidad** de Profundidad (DFS):
+  `busqueda/no_informada/profundidad.py`.
+- **Definicion de la heuristica** (con su justificacion de admisibilidad para el informe):
+  `busqueda/informada/heuristica.py`.
+- Cada algoritmo nuevo debe agregarse a `ALGORITMOS_DISPONIBLES` en
+  `gui/panel_control.py` para que la interfaz pueda ejecutarlo.

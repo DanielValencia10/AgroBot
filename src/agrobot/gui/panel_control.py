@@ -1,38 +1,83 @@
 """
 Archivo:       src/agrobot/gui/panel_control.py
-Objetivo:      Ofrecer al usuario los controles para elegir el tipo y algoritmo de
-               busqueda a ejecutar, y para cargar el archivo de mundo sobre el que se
-               va a resolver el problema.
+Objetivo:      Convertir la eleccion del usuario (mundo + algoritmo, hecha en
+               pantalla_seleccion.py) en una busqueda ejecutada: cargar el mundo,
+               construir el problema, correr el algoritmo y entregar todo lo que la
+               ventana principal necesita para mostrarlo.
 Responsabilidad:
     SI hace:
-        - Permitir elegir entre "No informada" (con sub-opciones Amplitud, Costo
-          uniforme, Profundidad evitando ciclos) o "Informada" (con sub-opciones
-          Avara, A*).
-        - Permitir cargar un archivo de mundo (.txt) usando archivos/lector_mundo.py.
-        - Al confirmar, construir el AgroBotProblema a partir del Mundo cargado,
-          ejecutar el algoritmo de busqueda elegido y entregar el Resultado obtenido a
-          quien ensambla la ventana (ventana_principal.py), para que lo propague a
-          animacion.py y panel_reporte.py.
+        - Cargar el Mundo del archivo elegido (archivos/lector_mundo.py).
+        - Construir el AgroBotProblema a partir del Mundo.
+        - Traducir el Algoritmo elegido a la funcion que lo ejecuta y correrla.
+        - Decir que algoritmos estan disponibles (los que ya tienen implementacion).
+        - Avisar con excepciones claras cuando algo falla: ErrorMundo (archivo no valido)
+          o AlgoritmoNoDisponible (algoritmo elegido sin implementar).
     NO hace:
-        - No dibuja la cuadricula ni anima el camino (eso es de panel_mundo.py y
-          animacion.py).
+        - No dibuja nada: la eleccion la hace pantalla_seleccion.py y el resultado lo
+          muestra ventana_principal.py.
         - No implementa la logica interna de ningun algoritmo de busqueda.
 Importa de:
-    - busqueda.no_informada.amplitud, busqueda.no_informada.costo_uniforme,
-      busqueda.no_informada.profundidad, busqueda.informada.avara,
-      busqueda.informada.a_estrella: para ejecutar el algoritmo elegido por el
-      usuario.
-    - problema.agrobot_problema (AgroBotProblema): para construir el problema a partir
-      del Mundo cargado, antes de pasarlo al algoritmo elegido.
-    - archivos.lector_mundo: para cargar el Mundo desde el archivo .txt seleccionado.
-    - modelo.mundo (Mundo): para pasarlo entre lector_mundo y agrobot_problema.
+    - busqueda.no_informada.amplitud: buscar_amplitud.
+    - problema.agrobot_problema (AgroBotProblema): para construir el problema.
+    - archivos.lector_mundo: para cargar el Mundo desde el archivo .txt elegido.
+    - gui.catalogo_algoritmos (Algoritmo) y gui.pantalla_seleccion (SeleccionInicio).
 Lo importan:
-    - gui/ventana_principal.py (lo integra como uno de sus paneles).
+    - main.py (flujo seleccion -> busqueda -> ventana principal).
 Contrato previsto:
-    - PanelControl: componente de interfaz que expone la seleccion de algoritmo, la
-      carga de archivo, y al confirmar entrega un Resultado (ejecutando el algoritmo
-      elegido sobre el problema construido) para que la ventana principal lo propague
-      a los demas paneles.
-PENDIENTE:
-    - Libreria de GUI a usar (depende de la misma decision de ventana_principal.py).
+    - ALGORITMOS_DISPONIBLES: diccionario Algoritmo -> funcion buscar_*(problema) que
+      retorna un Resultado. AL IMPLEMENTAR UN ALGORITMO NUEVO HAY QUE AGREGARLO AQUI
+      (Costo uniforme, Profundidad, Avara y A* aun no estan).
+    - ejecutar_seleccion(seleccion): retorna una EjecucionBusqueda (ruta_mundo,
+      algoritmo, mundo, problema, resultado). Lanza ErrorMundo o AlgoritmoNoDisponible.
+    - AlgoritmoNoDisponible: subclase de NotImplementedError; su atributo `algoritmo`
+      dice cual fue.
+Decision de equipo:
+    - La eleccion de tipo/algoritmo y de archivo se hace en pantalla_seleccion.py (ya
+      implementada); este archivo conserva el nombre panel_control.py del esqueleto pero
+      es el "controlador" de esa eleccion, no un panel con botones.
 """
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from ..archivos.lector_mundo import leer_mundo_desde_archivo
+from ..busqueda.no_informada.amplitud import buscar_amplitud
+from ..problema.agrobot_problema import AgroBotProblema
+from .catalogo_algoritmos import Algoritmo
+
+ALGORITMOS_DISPONIBLES = {
+    Algoritmo.AMPLITUD: buscar_amplitud,
+}
+
+
+class AlgoritmoNoDisponible(NotImplementedError):
+    def __init__(self, algoritmo: Algoritmo):
+        super().__init__(algoritmo.value + " todavia no esta implementado.")
+        self.algoritmo = algoritmo
+
+
+@dataclass(frozen=True)
+class EjecucionBusqueda:
+    """Una busqueda ya ejecutada, lista para mostrarse."""
+
+    ruta_mundo: object
+    algoritmo: Algoritmo
+    mundo: object
+    problema: object
+    resultado: object
+
+
+def ejecutar_seleccion(seleccion) -> EjecucionBusqueda:
+    """Carga el mundo, construye el problema y corre el algoritmo elegido."""
+    buscar = ALGORITMOS_DISPONIBLES.get(seleccion.algoritmo)
+    if buscar is None:
+        raise AlgoritmoNoDisponible(seleccion.algoritmo)
+    mundo = leer_mundo_desde_archivo(seleccion.ruta_mundo)  # lanza ErrorMundo
+    problema = AgroBotProblema(mundo)
+    return EjecucionBusqueda(
+        ruta_mundo=seleccion.ruta_mundo,
+        algoritmo=seleccion.algoritmo,
+        mundo=mundo,
+        problema=problema,
+        resultado=buscar(problema),
+    )
