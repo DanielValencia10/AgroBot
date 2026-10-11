@@ -31,8 +31,11 @@ Contrato previsto:
       (por omision, el inicial): casillas, obstaculos, deposito, la avioneta si sigue
       sin usar, los cultivos pendientes (secos) y los ya tratados, y al robot (a pie o
       en avioneta) mirando hacia `direccion` ("n", "e", "s" u "o").
-    - dibujar_fondo(pantalla) y dibujar_elementos(pantalla, estado): las dos mitades de
-      dibujar, para que animacion.py dibuje encima los actores en movimiento.
+    - dibujar_fondo(pantalla), dibujar_avioneta(pantalla, estado) y
+      dibujar_cultivos(pantalla, estado) (dibujar_elementos hace las dos ultimas): las
+      piezas de dibujar, para que animacion.py las combine con los actores en
+      movimiento y con sus propias plantas animadas.
+    - ampliar(imagen): la imagen a la escala del panel, para dibujar fuera de el.
     - rect_de_casilla(coordenada): pygame.Rect de una casilla (fila, columna) en pantalla.
     - rect: pygame.Rect de toda la cuadricula.
 Decisiones de equipo:
@@ -80,7 +83,7 @@ class PanelMundo:
         return pygame.Rect(self.rect.x + columna * self.lado,
                            self.rect.y + fila * self.lado, self.lado, self.lado)
 
-    def _ampliar(self, imagen: pygame.Surface) -> pygame.Surface:
+    def ampliar(self, imagen: pygame.Surface) -> pygame.Surface:
         """La imagen a la escala del panel (sin suavizar), calculada una sola vez."""
         if self.escala == 1:
             return imagen
@@ -93,9 +96,9 @@ class PanelMundo:
     def _construir_fondo(self) -> pygame.Surface:
         """Parte que nunca cambia: tierra, obstaculos y deposito."""
         fondo = pygame.Surface(self.rect.size, pygame.SRCALPHA)
-        suelo = self._ampliar(self.sprites.casilla_libre)
-        obstaculo = self._ampliar(self.sprites.obstaculo)
-        deposito = self._ampliar(self.sprites.deposito)
+        suelo = self.ampliar(self.sprites.casilla_libre)
+        obstaculo = self.ampliar(self.sprites.obstaculo)
+        deposito = self.ampliar(self.sprites.deposito)
         for fila in range(constantes.TAMANO_CUADRICULA):
             for columna in range(constantes.TAMANO_CUADRICULA):
                 destino = (columna * self.lado, fila * self.lado)
@@ -117,13 +120,21 @@ class PanelMundo:
         """Avioneta sin usar y cultivos (secos y tratados); no dibuja al robot."""
         if estado is None:
             estado = self._estado_inicial()
+        self.dibujar_avioneta(pantalla, estado)
+        self.dibujar_cultivos(pantalla, estado)
+
+    def dibujar_avioneta(self, pantalla, estado) -> None:
+        """La avioneta en su casilla original, solo mientras no se ha usado."""
         sin_usar = (not estado.en_avioneta
                     and estado.combustible == constantes.COMBUSTIBLE_INICIAL_AVIONETA)
         if sin_usar:
-            pantalla.blit(self._ampliar(self.sprites.avioneta_base),
+            pantalla.blit(self.ampliar(self.sprites.avioneta_base),
                           self.rect_de_casilla(self.mundo.avioneta))
-        seco = self._ampliar(self.sprites.cultivo[0])
-        tratado = self._ampliar(self.sprites.cultivo[-1])
+
+    def dibujar_cultivos(self, pantalla, estado) -> None:
+        """Cada cultivo del mundo: seco si sigue en P, tratado si ya salio de P."""
+        seco = self.ampliar(self.sprites.cultivo[0])
+        tratado = self.ampliar(self.sprites.cultivo[-1])
         for coordenada in self.mundo.cultivos_secos:
             imagen = seco if coordenada in estado.pendientes else tratado
             pantalla.blit(imagen, self.rect_de_casilla(coordenada))
@@ -134,7 +145,7 @@ class PanelMundo:
         self.dibujar_fondo(pantalla)
         self.dibujar_elementos(pantalla, estado)
         grupo = self.sprites.avioneta if estado.en_avioneta else self.sprites.robot
-        pantalla.blit(self._ampliar(grupo[(direccion, 0)]),
+        pantalla.blit(self.ampliar(grupo[(direccion, 0)]),
                       self.rect_de_casilla(estado.posicion))
 
     def _estado_inicial(self):
