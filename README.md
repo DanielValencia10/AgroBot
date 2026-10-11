@@ -13,6 +13,44 @@ estructura de carpetas, los archivos vacios de logica (cada uno con su
 cabecera de documentacion) y la documentacion inicial. No hay implementacion
 todavia.
 
+## Instalacion del entorno
+
+Las dependencias (por ahora solo `pygame-ce`) se instalan dentro de un entorno
+virtual local en la carpeta `.venv/`. Esa carpeta ya esta en `.gitignore`, asi
+que no se sube al repositorio: cada integrante crea la suya.
+
+Windows (PowerShell), desde la raiz del repositorio:
+
+```
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+Linux / macOS:
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Para ver las pantallas de inicio (bienvenida y seleccion de mundo y algoritmo), con el
+entorno activado:
+
+```
+cd src
+python -m agrobot.gui.pantalla_inicio
+```
+
+Las pantallas de inicio usan las tipografias Pixelify Sans y DM Sans (gratuitas, de
+Google Fonts). Copia sus `.ttf` en `src/agrobot/gui/fuentes/` siguiendo el `LEEME.md` de
+esa carpeta; sin ellas la aplicacion funciona igual, pero con una letra del sistema.
+
+Si PowerShell no deja activar el entorno, ejecutar una vez
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. No instalar `pygame` y
+`pygame-ce` en el mismo entorno: chocan entre si.
+
 ## Arbol de carpetas
 
 ```
