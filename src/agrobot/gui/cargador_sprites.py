@@ -6,14 +6,14 @@ Objetivo:      Cargar los sprites desde assets/sprites/ y entregarlos por nombre
 Responsabilidad:
     SI hace:
         - Cargar desde disco cada imagen listada en assets/README.md
-          (casilla_libre, obstaculo, robot, robot_en_avioneta, avioneta, deposito,
-          cultivo_seco, cultivo_tratado) y mantenerlas disponibles en memoria.
+          (casilla_libre, obstaculo, avioneta, deposito, cultivo_seco, cultivo_tratado,
+          robot_n/e/s/o y robot_en_avioneta_n/e/s/o: una imagen por direccion) y mantenerlas disponibles en memoria.
         - Exponer un diccionario nombre -> imagen cargada, para que los paneles pidan
           el sprite por nombre sin conocer la ruta en disco.
         - Exponer la correspondencia entre cada codigo de celda del archivo de mundo
           (0 a 5, segun constantes.py) y el nombre del sprite que le corresponde por
           defecto (por ejemplo, codigo 3 -> "cultivo_seco"; el cambio a
-          "cultivo_tratado" y a "robot_en_avioneta" lo decide cada panel segun el
+          "cultivo_tratado" y a "robot_en_avioneta_*" lo decide cada panel segun el
           estado dinamico, no este archivo).
     NO hace:
         - No decide en que posicion de la cuadricula se dibuja cada sprite ni como se
