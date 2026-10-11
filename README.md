@@ -104,6 +104,7 @@ agrobot/
 │       ├── panel_mundo.py
 │       ├── animacion.py
 │       ├── panel_reporte.py
+│       ├── arbol_exploracion.py  (arbol de exploracion que se arma durante la animacion)
 │       └── cargador_sprites.py  (unico archivo que lee assets/sprites/)
 └── tests/
     ├── test_lector_mundo.py
