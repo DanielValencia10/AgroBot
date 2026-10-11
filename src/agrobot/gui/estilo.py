@@ -53,6 +53,7 @@ COLOR_SALVIA_TENUE = (163, 177, 138) # #A3B18A subtitulos y ayudas
 COLOR_CREMA = (220, 210, 181)        # #DCD2B5 texto principal
 COLOR_TEXTO_DESHABILITADO = (109, 121, 102)  # #6D7966
 COLOR_FILA_ENCIMA = (36, 66, 49)     # fila bajo el mouse (entre fondo y tarjeta)
+COLOR_ALERTA = (214, 122, 92)        # #D67A5C avisos de error (sin solucion)
 
 # ---------------------------------------------------------------- fuentes
 CARPETA_FUENTES = Path(__file__).resolve().parent / "fuentes"
@@ -97,6 +98,11 @@ def fuente_texto(tamano: int, peso: int = 400):
 
 def _fuente(familia, tamano, peso):
     clave = (familia, tamano, peso)
+    if clave in _cache_fuentes:
+        try:
+            _cache_fuentes[clave].size("")
+        except pygame.error:  # pygame se cerro y se volvio a iniciar: la fuente quedo invalida
+            del _cache_fuentes[clave]
     if clave not in _cache_fuentes:
         patrones = (_PATRONES_PIXEL if familia == "pixel" else _PATRONES_TEXTO)[peso]
         ruta = _buscar_archivo(patrones)
@@ -245,9 +251,11 @@ def dibujar_borde_punteado(pantalla, rect, color, trazo: int = 6, hueco: int = 5
         y += trazo + hueco
 
 
-def dibujar_boton(pantalla, rect, etiqueta, habilitado: bool, con_mouse: bool) -> None:
-    """Boton grande de las pantallas de inicio (con sombra cuando esta habilitado)."""
-    fuente = fuente_pixel(22, 700)
+def dibujar_boton(pantalla, rect, etiqueta, habilitado: bool, con_mouse: bool,
+                  tamano: int = 22) -> None:
+    """Boton de las pantallas (con sombra cuando esta habilitado). `tamano` es el de la
+    letra: 22 para los botones grandes de inicio, menos para los de la ventana principal."""
+    fuente = fuente_pixel(tamano, 700)
     if habilitado:
         pygame.draw.rect(pantalla, COLOR_OLIVA_OSCURO, rect.move(0, 6), border_radius=12)
         relleno = COLOR_LINO if con_mouse else COLOR_OLIVA

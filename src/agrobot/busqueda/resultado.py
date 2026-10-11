@@ -27,4 +27,24 @@ Contrato previsto:
     - Resultado: clase con los campos camino_de_movimientos, nodos_expandidos,
       profundidad_de_la_solucion, tiempo_de_computo y costo_total (opcional, solo para
       Costo uniforme y A*).
+    - camino_de_estados (extra): los estados por los que pasa la solucion, del inicial
+      al meta; permite dibujar y animar sin volver a aplicar los movimientos.
+    - solucion_encontrada (extra): False cuando la busqueda termino sin hallar meta; en
+      ese caso los caminos quedan vacios y profundidad_de_la_solucion en 0.
 """
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass(frozen=True)
+class Resultado:
+    camino_de_movimientos: tuple
+    nodos_expandidos: int
+    profundidad_de_la_solucion: int
+    tiempo_de_computo: float
+    costo_total: Optional[float] = None
+    camino_de_estados: tuple = ()
+    solucion_encontrada: bool = True
+

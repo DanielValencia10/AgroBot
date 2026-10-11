@@ -41,10 +41,69 @@ Contrato previsto:
     - aplicar(mundo, estado, movimiento): retorna el Estado sucesor que resulta de
       aplicar el movimiento (desplazamiento + efectos automaticos descritos arriba)
       sobre el estado dado. Asume que es_aplicable ya fue verificado.
-PENDIENTE:
-    - Orden exacto de evaluacion de los operadores/efectos cuando una misma casilla
-      pudiera activar mas de un efecto (en los mundos de prueba no coinciden deposito,
-      cultivo y avioneta en una misma casilla, pero el orden de implementacion debe
-      quedar explicito).
-    - Orden en que se recorren los movimientos (ver tambien modelo/movimiento.py).
+Decisiones de equipo (antes PENDIENTE):
+    - Orden de los efectos al entrar a una casilla: primero el consumo de combustible
+      (segun el e de ANTES de moverse), luego avioneta, deposito y cultivo. En los
+      mundos de prueba no coinciden dos de ellos en una casilla, pero el orden queda fijo.
+    - La avioneta "no usada" es la que cumple e=falso y k=COMBUSTIBLE_INICIAL_AVIONETA;
+      una avioneta ya agotada (e=falso, k=0) no vuelve a subir al robot.
+    - Orden de los movimientos: el de modelo/movimiento.py (arriba, abajo, izquierda,
+      derecha).
 """
+from __future__ import annotations
+
+from dataclasses import replace
+
+from .. import constantes
+from ..modelo.estado import Estado
+from ..modelo.movimiento import obtener_desplazamiento
+
+
+def _destino(estado: Estado, movimiento) -> tuple:
+    delta_fila, delta_columna = obtener_desplazamiento(movimiento)
+    return (estado.fila + delta_fila, estado.columna + delta_columna)
+
+
+def es_aplicable(mundo, estado: Estado, movimiento) -> bool:
+    """El destino esta dentro de la cuadricula y no es un obstaculo."""
+    destino = _destino(estado, movimiento)
+    return mundo.esta_dentro_de_cuadricula(destino) and not mundo.es_obstaculo(destino)
+
+
+def aplicar(mundo, estado: Estado, movimiento) -> Estado:
+    """Estado resultante de mover al robot y aplicar los efectos de la casilla destino.
+
+    Asume que es_aplicable(mundo, estado, movimiento) ya se verifico.
+    """
+    destino = _destino(estado, movimiento)
+    fertilizante = estado.fertilizante
+    en_avioneta = estado.en_avioneta
+    combustible = estado.combustible
+    pendientes = estado.pendientes
+
+    if en_avioneta:  # viajaba en avioneta: este paso gasta una unidad
+        combustible -= 1
+        if combustible == 0:  # avioneta agotada
+            en_avioneta = False
+
+    if (destino == mundo.avioneta and not en_avioneta
+            and combustible == constantes.COMBUSTIBLE_INICIAL_AVIONETA):
+        en_avioneta = True  # sube sin gastar combustible en este movimiento
+
+    if destino == mundo.deposito:
+        fertilizante = constantes.CAPACIDAD_FERTILIZANTE
+
+    if destino in pendientes and fertilizante > 0:
+        fertilizante -= 1
+        pendientes = pendientes - {destino}
+
+    return replace(
+        estado,
+        fila=destino[0],
+        columna=destino[1],
+        fertilizante=fertilizante,
+        en_avioneta=en_avioneta,
+        combustible=combustible,
+        pendientes=pendientes,
+    )
+

@@ -1,7 +1,7 @@
 # Assets de AgroBot
 
 Esta carpeta contiene los recursos de arte (sprites) usados por la GUI para
-dibujar la cuadricula y animar el camino solucion. No contiene codigo.
+dibujar la cuadricula y animar el camino solucion. Solo contiene imagenes y dos scripts de ejemplo.
 
 Solo `src/agrobot/gui/cargador_sprites.py` conoce la ruta de esta carpeta;
 ningun otro archivo del proyecto debe leer `assets/` directamente.
@@ -14,46 +14,40 @@ un pixel de la imagen, asi que la cuadricula completa de 10 x 10 casillas mide 6
 Si el juego los agranda, debe hacerlo sin suavizar: `pygame.transform.scale`, nunca
 `smoothscale`, y con un factor entero (2x, 3x...) para que los pixeles no se deformen.
 
-Los PNG se generan con `herramientas/pixelar_sprites.py` a partir de las ilustraciones
-originales (`Demo/sprites/`). Para regenerarlos o cambiar el aspecto (colores, saturacion,
-resolucion), ver la cabecera de ese script (necesita `pip install pillow numpy`).
+Los sprites actuales son de elaboracion propia del equipo. `herramientas/legado/` guarda
+`pixelar_sprites.py` y `animar_robot.py`, que generaron la version anterior (PNG planos) y
+no producen la estructura actual de subcarpetas; se conservan por si se reutilizan.
 
 ## Sprites (`assets/sprites/`)
 
-Formato: PNG de 64 x 64 px. `casilla_libre` y `obstaculo` cubren toda la casilla; los
-demas tienen fondo transparente y se dibujan encima de `casilla_libre`.
+Formato: PNG de 64 x 64 px, organizados en una carpeta por objeto. `casilla_libre` y
+`obstaculo` cubren toda la casilla; los demas tienen fondo transparente y se dibujan encima
+de `casilla_libre`. El sufijo de direccion es `n` (arriba), `e` (derecha), `s` (abajo) y
+`o` (izquierda); las diagonales son `ne`, `no`, `se` y `so`.
 
-| Archivo                          | Representa                                                         |
-|----------------------------------|--------------------------------------------------------------------|
-| `casilla_libre.png`              | Casilla libre (codigo 0): tierra.                                  |
-| `obstaculo.png`                  | Obstaculo (codigo 1): piedras.                                     |
-| `robot_n.png`                    | AgroBot caminando hacia arriba (visto de espaldas).                |
-| `robot_e.png`                    | AgroBot caminando hacia la derecha.                                |
-| `robot_s.png`                    | AgroBot caminando hacia abajo (visto de frente).                   |
-| `robot_o.png`                    | AgroBot caminando hacia la izquierda.                              |
-| `robot_en_avioneta_n.png`        | AgroBot montado en la avioneta, hacia arriba (e = verdadero).      |
-| `robot_en_avioneta_e.png`        | Igual, hacia la derecha.                                           |
-| `robot_en_avioneta_s.png`        | Igual, hacia abajo.                                                |
-| `robot_en_avioneta_o.png`        | Igual, hacia la izquierda.                                         |
-| `robot_<dir>_paso1.png`          | Pose de caminar 1 (rueda y brazo izquierdos arriba), para cada direccion. |
-| `robot_<dir>_paso2.png`          | Pose de caminar 2 (rueda y brazo derechos arriba), para cada direccion.   |
-| `avioneta.png`                   | Avioneta en su posicion original, sin el robot encima (codigo 5).  |
-| `deposito.png`                   | Deposito de fertilizante (codigo 4).                               |
-| `cultivo_seco.png`               | Cultivo seco pendiente de fertilizar (codigo 3, dentro de P).      |
-| `cultivo_tratado.png`            | Cultivo ya fertilizado (salio de P durante la animacion).          |
+| Carpeta / archivo                         | Representa                                                          |
+|-------------------------------------------|---------------------------------------------------------------------|
+| `mundo/casilla_libre.png`                 | Casilla libre (codigo 0): tierra.                                   |
+| `mundo/obstaculo.png`                     | Obstaculo (codigo 1): piedras.                                      |
+| `robot/robot_<n,e,s,o>_<0,1,2>.png`       | AgroBot caminando. Cuadro 0 = reposo, 1 = paso adelante, 2 = paso atras. |
+| `robot/robot_trans_<ne,no,se,so>.png`     | AgroBot en las diagonales, solo se ve mientras gira.                |
+| `avioneta/avioneta_<8 dir>_<0,1,2>.png`   | AgroBot montado en la avioneta (e = verdadero); los 3 cuadros son la helice girando. |
+| `avioneta/avioneta base.png`              | Avioneta vacia en su posicion original (codigo 5).                  |
+| `deposito/deposito.png`                   | Deposito de fertilizante (codigo 4).                                |
+| `cultivo/planta_trans_<0..8>.png`         | Cultivo: 0 = seco pendiente de fertilizar (codigo 3), 8 = tratado; 1 a 7 son la transicion. |
 
-El sufijo de direccion es `_n` (arriba), `_e` (derecha), `_s` (abajo) y `_o` (izquierda).
 La direccion del robot es la del ultimo movimiento; antes del primer movimiento se usa
-`robot_s`.
+`s`.
 
-## Animacion de caminar
+## Animaciones
 
-Cada direccion tiene 3 imagenes: la de reposo (`robot_n.png`) y dos poses (`robot_n_paso1.png`
-y `robot_n_paso2.png`). Mientras el robot se mueve de una casilla a otra se alternan asi:
+Los tiempos y el orden de los cuadros viven en `src/agrobot/gui/animacion.py`:
 
-    reposo -> paso1 -> reposo -> paso2 -> (repite)
+- Caminata del robot: cuadros `0 -> 1 -> 0 -> 2` (170 ms cada uno), solo mientras se mueve y no gira.
+- Giro: pasa por cada direccion intermedia del anillo `n, ne, e, se, s, so, o, no` por el
+  lado mas corto (70 ms por cuadro). Para el robot las diagonales usan `robot_trans_*`.
+- Helice de la avioneta: cuadros `0 -> 1 -> 2 -> 1` (55 ms), siempre girando.
+- Planta: los 9 cuadros en orden al fertilizarla (130 ms cada uno).
 
-a unos 6 a 8 cuadros por segundo; al llegar a la casilla se vuelve a la imagen de reposo.
-Las poses se generan con `herramientas/animar_robot.py` a partir de las 4 imagenes de reposo
-(levanta una rueda, balancea los brazos y sube el cuerpo 1 px). La avioneta con el robot no
-tiene poses: se mueve deslizandose de una casilla a otra.
+`ejemplo_pygame.py` y `ejemplo_planta_pygame.py` (en `assets/sprites/`) muestran estas
+animaciones por separado; son la referencia visual. Ejecutarlos desde esa carpeta.

@@ -37,4 +37,39 @@ Contrato previsto:
       costo_acumulado.
     - reconstruir_camino(nodo): recibe el nodo meta y retorna la lista ordenada de
       movimientos desde la raiz hasta ese nodo, siguiendo la cadena de padres.
+    - reconstruir_camino_de_estados(nodo): igual, pero retorna los estados desde la raiz
+      hasta ese nodo (incluidos ambos); la GUI los usa para dibujar cada paso.
 """
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Optional
+
+
+@dataclass(frozen=True)
+class Nodo:
+    estado: Any
+    padre: Optional["Nodo"] = None
+    movimiento: Any = None
+    profundidad: int = 0
+    costo_acumulado: float = 0.0
+
+
+def _cadena_desde_la_raiz(nodo: Nodo) -> list:
+    cadena = []
+    while nodo is not None:
+        cadena.append(nodo)
+        nodo = nodo.padre
+    cadena.reverse()
+    return cadena
+
+
+def reconstruir_camino(nodo: Nodo) -> list:
+    """Movimientos desde la raiz hasta `nodo` (la raiz no tiene movimiento)."""
+    return [paso.movimiento for paso in _cadena_desde_la_raiz(nodo)[1:]]
+
+
+def reconstruir_camino_de_estados(nodo: Nodo) -> list:
+    """Estados desde la raiz hasta `nodo`, ambos incluidos."""
+    return [paso.estado for paso in _cadena_desde_la_raiz(nodo)]
+

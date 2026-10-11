@@ -35,4 +35,96 @@ Contrato previsto:
       construido a partir de su contenido. Si el archivo no cumple el formato
       esperado, señala el error de validacion correspondiente en vez de construir un
       Mundo invalido.
+    - construir_mundo(matriz): valida una matriz ya leida y construye el Mundo (util
+      para probar sin archivos).
+    - ErrorMundo (subclase de ValueError): se lanza con un mensaje claro cuando el
+      archivo no existe, no se puede leer o incumple alguna validacion.
 """
+from __future__ import annotations
+
+from pathlib import Path
+
+from .. import constantes
+from ..modelo.mundo import Mundo
+
+_CODIGOS_VALIDOS = range(constantes.CODIGO_LIBRE, constantes.CODIGO_AVIONETA + 1)
+
+
+class ErrorMundo(ValueError):
+    """El archivo de mundo no existe o no cumple el formato esperado."""
+
+
+def leer_mundo_desde_archivo(ruta_del_archivo) -> Mundo:
+    """Lee y valida un archivo de mundo; retorna el Mundo construido."""
+    ruta = Path(ruta_del_archivo)
+    try:
+        contenido = ruta.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise ErrorMundo("No se encontro el archivo: " + str(ruta)) from None
+    except (OSError, UnicodeDecodeError) as error:
+        raise ErrorMundo("No se pudo leer " + ruta.name + ": " + str(error)) from None
+    return construir_mundo(_a_matriz(contenido, ruta.name))
+
+
+def _a_matriz(contenido: str, nombre: str) -> list:
+    """Convierte el texto en una matriz de enteros (una lista por fila no vacia)."""
+    matriz = []
+    for numero_linea, linea in enumerate(contenido.splitlines(), start=1):
+        linea = linea.strip()
+        if linea == "":
+            continue
+        try:
+            matriz.append([int(numero) for numero in linea.split()])
+        except ValueError:
+            raise ErrorMundo(
+                nombre + ", linea " + str(numero_linea)
+                + ": solo se permiten numeros separados por espacios."
+            ) from None
+    return matriz
+
+
+def construir_mundo(matriz) -> Mundo:
+    """Valida una matriz de codigos de celda y construye el Mundo. Lanza ErrorMundo."""
+    tamano = constantes.TAMANO_CUADRICULA
+    if len(matriz) != tamano:
+        raise ErrorMundo(
+            "El mundo debe tener " + str(tamano) + " filas y tiene " + str(len(matriz)) + "."
+        )
+    for fila, valores in enumerate(matriz):
+        if len(valores) != tamano:
+            raise ErrorMundo(
+                "La fila " + str(fila) + " debe tener " + str(tamano)
+                + " columnas y tiene " + str(len(valores)) + "."
+            )
+
+    posiciones = {codigo: [] for codigo in _CODIGOS_VALIDOS}
+    for fila, valores in enumerate(matriz):
+        for columna, codigo in enumerate(valores):
+            if codigo not in posiciones:
+                raise ErrorMundo(
+                    "Codigo invalido " + str(codigo) + " en (" + str(fila) + ", "
+                    + str(columna) + "): solo se permiten del 0 al 5."
+                )
+            posiciones[codigo].append((fila, columna))
+
+    for codigo, nombre in (
+        (constantes.CODIGO_AGROBOT, "AgroBot (2)"),
+        (constantes.CODIGO_DEPOSITO, "deposito (4)"),
+        (constantes.CODIGO_AVIONETA, "avioneta (5)"),
+    ):
+        if len(posiciones[codigo]) != 1:
+            raise ErrorMundo(
+                "Debe haber exactamente un " + nombre + " y hay "
+                + str(len(posiciones[codigo])) + "."
+            )
+    if not posiciones[constantes.CODIGO_CULTIVO_SECO]:
+        raise ErrorMundo("Debe haber al menos un cultivo seco (3).")
+
+    return Mundo(
+        obstaculos=frozenset(posiciones[constantes.CODIGO_OBSTACULO]),
+        deposito=posiciones[constantes.CODIGO_DEPOSITO][0],
+        avioneta=posiciones[constantes.CODIGO_AVIONETA][0],
+        posicion_robot=posiciones[constantes.CODIGO_AGROBOT][0],
+        cultivos_secos=frozenset(posiciones[constantes.CODIGO_CULTIVO_SECO]),
+    )
+

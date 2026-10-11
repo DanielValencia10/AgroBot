@@ -19,14 +19,15 @@ Importa de:
 Lo importan:
     - main.py / gui/ventana_principal.py (cuando se integre).
 Contrato previsto:
-    - ejecutar_inicio(pantalla, carpeta_mundos): bloquea hasta que el usuario elige.
-      Retorna una SeleccionInicio, o None si cierra la ventana o pulsa Esc.
+    - ejecutar_inicio(pantalla, carpeta_mundos, saltar_bienvenida=False): bloquea hasta
+      que el usuario elige. Retorna una SeleccionInicio, o None si cierra la ventana o
+      pulsa Esc.
     - crear_ventana(): inicia pygame y retorna la superficie de la ventana de 1120x760.
     - SeleccionInicio y listar_mundos se re-exportan desde pantalla_seleccion.py.
 Vista previa:
     Desde la carpeta src/:   python -m agrobot.gui.pantalla_inicio
-PENDIENTE:
-    - Integrarla en el flujo de ventana_principal.py / main.py.
+Integracion:   main.py la usa para abrir la aplicacion y para volver a la seleccion desde
+               la ventana principal.
 """
 from __future__ import annotations
 
@@ -56,12 +57,18 @@ def crear_ventana():
     return pantalla
 
 
-def ejecutar_inicio(pantalla, carpeta_mundos):
-    """Bienvenida -> seleccion. Retorna SeleccionInicio, o None si el usuario cierra."""
+def ejecutar_inicio(pantalla, carpeta_mundos, saltar_bienvenida=False):
+    """Bienvenida -> seleccion. Retorna SeleccionInicio, o None si el usuario cierra.
+
+    Con saltar_bienvenida=True se abre directo la seleccion (por ejemplo, al volver desde
+    la ventana principal); si ahi pulsa "Volver al inicio" si se muestra la bienvenida.
+    """
     bienvenida = PantallaBienvenida()
     seleccion = PantallaSeleccion(carpeta_mundos)
     while True:
-        if bienvenida.ejecutar(pantalla) is None:
+        if saltar_bienvenida:
+            saltar_bienvenida = False
+        elif bienvenida.ejecutar(pantalla) is None:
             return None
         resultado = seleccion.ejecutar(pantalla)
         if resultado == VOLVER:
