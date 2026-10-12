@@ -31,7 +31,7 @@ import pygame  # noqa: E402
 
 from agrobot import main  # noqa: E402
 from agrobot.archivos.lector_mundo import ErrorMundo  # noqa: E402
-from agrobot.gui import pantalla_aviso, ventana_principal  # noqa: E402
+from agrobot.gui import pantalla_aviso, pantalla_resultados, ventana_principal  # noqa: E402
 from agrobot.gui.catalogo_algoritmos import Algoritmo  # noqa: E402
 from agrobot.gui.panel_control import AlgoritmoNoDisponible, ejecutar_seleccion  # noqa: E402
 from agrobot.gui.pantalla_seleccion import SeleccionInicio  # noqa: E402
@@ -155,6 +155,75 @@ class TestVentanaPrincipal(PruebaConVentana):
                 break
         ventana.dibujar(self.pantalla)
         self.assertTrue(ventana.animacion.terminada)
+
+
+class TestPantallaResultados(PruebaConVentana):
+    """Al terminar el recorrido aparece la informacion y el arbol en grande."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.ejecucion = ejecutar_seleccion(SeleccionInicio(PRUEBA1, Algoritmo.COSTO_UNIFORME))
+
+    def ventana_terminada(self):
+        ventana = self.nueva_ventana()
+        while not ventana.animacion.terminada:
+            ventana.actualizar(16)
+        return ventana
+
+    def test_aparece_sola_despues_de_la_meta_y_no_antes(self):
+        ventana = self.ventana_terminada()
+        self.assertFalse(ventana.mostrando_resultados)
+        self.avanzar(ventana, ventana_principal.RETRASO_RESULTADOS_MS + 100)
+        self.assertTrue(ventana.mostrando_resultados)
+        ventana.dibujar(self.pantalla)  # no debe fallar
+
+    def test_ver_mapa_vuelve_al_mapa_y_no_reaparece_sola(self):
+        ventana = self.ventana_terminada()
+        self.avanzar(ventana, ventana_principal.RETRASO_RESULTADOS_MS + 100)
+        ventana.procesar_evento(clic(pantalla_resultados.BOTON_MAPA))
+        self.assertFalse(ventana.mostrando_resultados)
+        self.avanzar(ventana, 3000)
+        self.assertFalse(ventana.mostrando_resultados)
+        # en el mapa, el boton "Resultados" (el de Pausar) la abre otra vez
+        ventana.procesar_evento(clic(ventana_principal.BOTON_PAUSA))
+        self.assertTrue(ventana.mostrando_resultados)
+
+    def test_reiniciar_e_inicio_desde_los_resultados(self):
+        ventana = self.ventana_terminada()
+        self.avanzar(ventana, ventana_principal.RETRASO_RESULTADOS_MS + 100)
+        self.assertEqual(ventana.procesar_evento(clic(pantalla_resultados.BOTON_INICIO)),
+                         ventana_principal.VOLVER)
+        ventana.procesar_evento(clic(pantalla_resultados.BOTON_REINICIAR))
+        self.assertFalse(ventana.mostrando_resultados)
+        self.assertEqual(ventana.animacion.paso, 0)
+        self.assertEqual(ventana.arbol.actual, ventana.arbol.raiz)
+
+    def test_teclas_y_cierre_en_resultados(self):
+        ventana = self.ventana_terminada()
+        self.avanzar(ventana, ventana_principal.RETRASO_RESULTADOS_MS + 100)
+        ventana.procesar_evento(tecla(pygame.K_RETURN))
+        self.assertFalse(ventana.mostrando_resultados)
+        ventana.procesar_evento(tecla(pygame.K_RETURN))  # terminada: abre los resultados
+        self.assertTrue(ventana.mostrando_resultados)
+        self.assertEqual(ventana.procesar_evento(tecla(pygame.K_ESCAPE)), ventana_principal.VOLVER)
+        self.assertEqual(ventana.procesar_evento(pygame.event.Event(pygame.QUIT)),
+                         ventana_principal.SALIR)
+
+    def test_los_botones_estan_agrupados_abajo_dentro_de_la_ventana(self):
+        botones = [pantalla_resultados.BOTON_MAPA, pantalla_resultados.BOTON_REINICIAR,
+                   pantalla_resultados.BOTON_INICIO]
+        pantalla = self.pantalla.get_rect()
+        for i, a in enumerate(botones):
+            self.assertTrue(pantalla.contains(a))
+            self.assertEqual(a.y, botones[0].y)  # misma fila
+            for b in botones[i + 1:]:
+                self.assertFalse(a.colliderect(b))
+        for area in (pantalla_resultados.AREA_INFO, pantalla_resultados.AREA_ARBOL):
+            self.assertTrue(pantalla.contains(area))
+            for boton in botones:
+                self.assertFalse(area.colliderect(boton))
+        self.assertFalse(pantalla_resultados.AREA_INFO.colliderect(pantalla_resultados.AREA_ARBOL))
 
 
 class TestPantallaAviso(unittest.TestCase):

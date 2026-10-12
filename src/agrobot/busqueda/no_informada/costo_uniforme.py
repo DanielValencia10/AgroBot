@@ -32,8 +32,65 @@ Contrato previsto:
       problema (estado_inicial, es_meta, sucesores con costo por paso) y retorna un
       Resultado con la solucion de menor costo (o la indicacion de que no hay
       solucion).
-PENDIENTE:
-    - Criterio de desempate entre nodos con el mismo costo acumulado en la cola de
-      prioridad (por ejemplo, orden de insercion, profundidad, o el orden de los
-      operadores).
+Decisiones de equipo (antes PENDIENTE):
+    - Desempate: entre nodos con el mismo costo acumulado sale primero el que se
+      inserto antes en la cola de prioridad (se usa un contador creciente como segundo
+      criterio, asi nunca se comparan Nodos entre si).
+    - Estados repetidos: se guarda el menor costo con el que se ha generado cada estado.
+      Un estado solo se vuelve a insertar si se llega a el con un costo MENOR. A
+      problema.sucesores se le pasa un camino vacio (igual que en amplitud.py).
+    - Entradas viejas: si al sacar un nodo de la cola su costo ya es mayor que el mejor
+      conocido para ese estado, se descarta sin expandirlo ni contarlo.
+    - nodos_expandidos cuenta tambien el nodo meta (verificarlo cuenta como expandirlo).
+    - La meta se verifica al sacar el nodo de la cola (no al generarlo); asi el primer
+      nodo meta que sale es el de menor costo.
 """
+from __future__ import annotations
+
+import heapq
+import time
+from itertools import count
+
+from ..nodo import Nodo, reconstruir_camino, reconstruir_camino_de_estados
+from ..resultado import Resultado
+
+
+def buscar_costo_uniforme(problema) -> Resultado:
+    """Costo uniforme sobre `problema`. Si no hay solucion, el Resultado lo indica."""
+    inicio = time.perf_counter()
+    raiz = Nodo(problema.estado_inicial())
+    desempate = count()
+    frontera = [(0.0, next(desempate), raiz)]   # (costo acumulado, orden de insercion, nodo)
+    mejor_costo = {raiz.estado: 0.0}            # menor costo conocido de cada estado
+    nodos_expandidos = 0
+
+    while frontera:
+        costo, _, nodo = heapq.heappop(frontera)
+        if costo > mejor_costo[nodo.estado]:
+            continue   # entrada vieja: ya se encontro un camino mas barato a este estado
+        nodos_expandidos += 1
+        if problema.es_meta(nodo.estado):
+            movimientos = reconstruir_camino(nodo)
+            return Resultado(
+                camino_de_movimientos=tuple(movimientos),
+                nodos_expandidos=nodos_expandidos,
+                profundidad_de_la_solucion=len(movimientos),
+                tiempo_de_computo=time.perf_counter() - inicio,
+                costo_total=nodo.costo_acumulado,
+                camino_de_estados=tuple(reconstruir_camino_de_estados(nodo)),
+            )
+        for movimiento, estado, costo_del_paso in problema.sucesores(nodo.estado, ()):
+            nuevo_costo = nodo.costo_acumulado + costo_del_paso
+            if estado in mejor_costo and nuevo_costo >= mejor_costo[estado]:
+                continue
+            mejor_costo[estado] = nuevo_costo
+            hijo = Nodo(estado, nodo, movimiento, nodo.profundidad + 1, nuevo_costo)
+            heapq.heappush(frontera, (nuevo_costo, next(desempate), hijo))
+
+    return Resultado(
+        camino_de_movimientos=(),
+        nodos_expandidos=nodos_expandidos,
+        profundidad_de_la_solucion=0,
+        tiempo_de_computo=time.perf_counter() - inicio,
+        solucion_encontrada=False,
+    )

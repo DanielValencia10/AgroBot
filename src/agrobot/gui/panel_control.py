@@ -18,6 +18,7 @@ Responsabilidad:
         - No implementa la logica interna de ningun algoritmo de busqueda.
 Importa de:
     - busqueda.no_informada.amplitud: buscar_amplitud.
+    - busqueda.no_informada.costo_uniforme: buscar_costo_uniforme.
     - problema.agrobot_problema (AgroBotProblema): para construir el problema.
     - archivos.lector_mundo: para cargar el Mundo desde el archivo .txt elegido.
     - gui.catalogo_algoritmos (Algoritmo) y gui.pantalla_seleccion (SeleccionInicio).
@@ -42,11 +43,13 @@ from dataclasses import dataclass
 
 from ..archivos.lector_mundo import leer_mundo_desde_archivo
 from ..busqueda.no_informada.amplitud import buscar_amplitud
+from ..busqueda.no_informada.costo_uniforme import buscar_costo_uniforme
 from ..problema.agrobot_problema import AgroBotProblema
 from .catalogo_algoritmos import Algoritmo
 
 ALGORITMOS_DISPONIBLES = {
     Algoritmo.AMPLITUD: buscar_amplitud,
+    Algoritmo.COSTO_UNIFORME: buscar_costo_uniforme,
 }
 
 
