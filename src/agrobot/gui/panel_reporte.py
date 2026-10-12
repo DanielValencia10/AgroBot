@@ -23,6 +23,9 @@ Contrato previsto:
     - PanelReporte(resultado, algoritmo): componente de interfaz que, dado un Resultado
       y el nombre del algoritmo ejecutado, muestra sus metricas (mostrando costo_total
       solo cuando el Resultado lo trae, es decir, con Costo uniforme y A*).
+    - filas_del_estado(estado, paso, costo=None): filas (paso, posicion, fertilizante,
+      combustible, cultivos secos, avioneta y, si se da, costo acumulado) de cualquier
+      Estado; la usa filas_del_robot y la pantalla de resultados para el nodo elegido.
     - dibujar(pantalla, area, animacion=None): dibuja el reporte en `area` (ALTO_RECOMENDADO
       de alto). Si se le pasa el PanelAnimacion, agrega ademas el estado actual del
       robot (paso, posicion, fertilizante, combustible, cultivos, avioneta) y el mensaje
@@ -58,17 +61,27 @@ class PanelReporte:
         return filas
 
     @staticmethod
-    def filas_del_robot(animacion) -> list:
-        """Pares (etiqueta, valor) del estado actual de la animacion."""
-        estado = animacion.estado_actual
-        return [
-            ("Paso", str(animacion.paso) + "/" + str(animacion.total_pasos)),
+    def filas_del_estado(estado, paso: str, costo=None) -> list:
+        """Pares (etiqueta, valor) de un Estado cualquiera (no solo el actual).
+        `paso` es el texto de la fila "Paso"; si se da `costo`, agrega "Costo acumulado"."""
+        filas = [
+            ("Paso", paso),
             ("Posición", "(" + str(estado.fila) + ", " + str(estado.columna) + ")"),
             ("Fertilizante", str(estado.fertilizante) + "/" + str(constantes.CAPACIDAD_FERTILIZANTE)),
             ("Combustible", str(estado.combustible) + "/" + str(constantes.COMBUSTIBLE_INICIAL_AVIONETA)),
             ("Cultivos secos", str(len(estado.pendientes))),
             ("En avioneta", "Sí" if estado.en_avioneta else "No"),
         ]
+        if costo is not None:
+            filas.append(("Costo acumulado", f"{costo:g}"))
+        return filas
+
+    @staticmethod
+    def filas_del_robot(animacion) -> list:
+        """Pares (etiqueta, valor) del estado actual de la animacion."""
+        return PanelReporte.filas_del_estado(
+            animacion.estado_actual,
+            str(animacion.paso) + "/" + str(animacion.total_pasos))
 
     def mensaje(self, animacion=None):
         """(texto, color) del estado de la reproduccion, o None si no hay animacion."""
@@ -113,4 +126,3 @@ class PanelReporte:
             estilo.texto(pantalla, valor, estilo.fuente_texto(15, 700),
                          estilo.COLOR_CREMA, (derecha, y), ancla="topright")
             y += ALTO_FILA
-
