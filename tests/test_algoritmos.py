@@ -34,6 +34,7 @@ sys.path.insert(0, str(RAIZ / "src"))
 from agrobot.archivos.lector_mundo import leer_mundo_desde_archivo  # noqa: E402
 from agrobot.busqueda.no_informada.amplitud import buscar_amplitud  # noqa: E402
 from agrobot.busqueda.no_informada.costo_uniforme import buscar_costo_uniforme  # noqa: E402
+from agrobot.busqueda.no_informada.profundidad import buscar_profundidad  # noqa: E402
 from agrobot.problema import costos, operadores  # noqa: E402
 from agrobot.problema.agrobot_problema import AgroBotProblema  # noqa: E402
 
@@ -137,6 +138,47 @@ class TestCostoUniforme(unittest.TestCase):
         vecinos = {(robot[0] - 1, robot[1]), (robot[0] + 1, robot[1]), (robot[0], robot[1] + 1)}
         encerrado = replace(self.mundo, obstaculos=self.mundo.obstaculos | vecinos)
         r = buscar_costo_uniforme(AgroBotProblema(encerrado))
+        self.assertFalse(r.solucion_encontrada)
+        self.assertEqual(r.camino_de_movimientos, ())
+        self.assertEqual(r.profundidad_de_la_solucion, 0)
+        self.assertEqual(r.nodos_expandidos, 1)
+        self.assertIsNone(r.costo_total)
+
+
+class TestProfundidad(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mundo = leer_mundo_desde_archivo(RAIZ / "mundos" / "Prueba1.txt")
+        cls.problema = AgroBotProblema(cls.mundo)
+        cls.resultado = buscar_profundidad(cls.problema)
+
+    def test_el_camino_resuelve_el_mundo(self):
+        estado = self.problema.estado_inicial()
+        for movimiento in self.resultado.camino_de_movimientos:
+            self.assertTrue(operadores.es_aplicable(self.mundo, estado, movimiento))
+            estado = operadores.aplicar(self.mundo, estado, movimiento)
+        self.assertTrue(self.problema.es_meta(estado))
+        self.assertEqual(estado, self.resultado.camino_de_estados[-1])
+        self.assertEqual(self.resultado.camino_de_estados[0], self.problema.estado_inicial())
+
+    def test_metricas_coherentes(self):
+        r = self.resultado
+        self.assertTrue(r.solucion_encontrada)
+        self.assertEqual(r.profundidad_de_la_solucion, len(r.camino_de_movimientos))
+        self.assertEqual(len(r.camino_de_estados), r.profundidad_de_la_solucion + 1)
+        self.assertGreaterEqual(r.nodos_expandidos, r.profundidad_de_la_solucion + 1)
+        self.assertGreater(r.tiempo_de_computo, 0)
+        self.assertIsNone(r.costo_total)
+
+    def test_sin_ciclos_en_la_rama(self):
+        estados = self.resultado.camino_de_estados
+        self.assertEqual(len(estados), len(set(estados)))
+
+    def test_sin_solucion(self):
+        robot = self.mundo.posicion_robot
+        vecinos = {(robot[0] - 1, robot[1]), (robot[0] + 1, robot[1]), (robot[0], robot[1] + 1)}
+        encerrado = replace(self.mundo, obstaculos=self.mundo.obstaculos | vecinos)
+        r = buscar_profundidad(AgroBotProblema(encerrado))
         self.assertFalse(r.solucion_encontrada)
         self.assertEqual(r.camino_de_movimientos, ())
         self.assertEqual(r.profundidad_de_la_solucion, 0)
