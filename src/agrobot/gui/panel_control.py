@@ -44,12 +44,14 @@ from dataclasses import dataclass
 from ..archivos.lector_mundo import leer_mundo_desde_archivo
 from ..busqueda.no_informada.amplitud import buscar_amplitud
 from ..busqueda.no_informada.costo_uniforme import buscar_costo_uniforme
+from ..busqueda.no_informada.profundidad import buscar_profundidad
 from ..problema.agrobot_problema import AgroBotProblema
 from .catalogo_algoritmos import Algoritmo
 
 ALGORITMOS_DISPONIBLES = {
     Algoritmo.AMPLITUD: buscar_amplitud,
     Algoritmo.COSTO_UNIFORME: buscar_costo_uniforme,
+    Algoritmo.PROFUNDIDAD: buscar_profundidad,
 }
 
 

@@ -40,3 +40,51 @@ PENDIENTE:
     - Orden en que se apilan/exploran los hijos de un nodo (afecta cual solucion se
       encuentra primero).
 """
+from __future__ import annotations
+
+import time
+
+from ..nodo import Nodo, reconstruir_camino, reconstruir_camino_de_estados
+from ..resultado import Resultado
+
+
+def buscar_profundidad(problema) -> Resultado:
+    """DFS sobre `problema` evitando ciclos dentro de cada rama. Si no hay solucion, el Resultado lo indica."""
+    inicio = time.perf_counter()
+    raiz = Nodo(problema.estado_inicial())
+    pila = [raiz]
+    nodos_expandidos = 0
+
+    while pila:
+        nodo = pila.pop()
+        nodos_expandidos += 1
+        if problema.es_meta(nodo.estado):
+            movimientos = reconstruir_camino(nodo)
+            return Resultado(
+                camino_de_movimientos=tuple(movimientos),
+                nodos_expandidos=nodos_expandidos,
+                profundidad_de_la_solucion=len(movimientos),
+                tiempo_de_computo=time.perf_counter() - inicio,
+                camino_de_estados=tuple(reconstruir_camino_de_estados(nodo)),
+            )
+        camino_de_la_rama = set(reconstruir_camino_de_estados(nodo))
+        for movimiento, estado, costo in reversed(
+            problema.sucesores(nodo.estado, camino_de_la_rama)
+        ):
+            pila.append(
+                Nodo(
+                    estado,
+                    nodo,
+                    movimiento,
+                    nodo.profundidad + 1,
+                    nodo.costo_acumulado + costo,
+                )
+            )
+
+    return Resultado(
+        camino_de_movimientos=(),
+        nodos_expandidos=nodos_expandidos,
+        profundidad_de_la_solucion=0,
+        tiempo_de_computo=time.perf_counter() - inicio,
+        solucion_encontrada=False,
+    )
