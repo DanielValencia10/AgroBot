@@ -46,7 +46,36 @@ PENDIENTE:
 from __future__ import annotations
 
 
+def _clave_ciclo(estado):
+    """Clave para identificar ciclos en la rama.
+
+    No incluye `combustible` (k), porque mientras el robot va en la avioneta cada
+    paso decrementa k en 1. Si se incluyera k, cualquier casilla ya visitada pareceria
+    un estado nuevo por tener menos combustible, haciendo que el robot oscile
+    indefinidamente entre casillas hasta quemar los 30 movimientos.
+
+    Las excepciones del problema se cumplen naturalmente:
+    - Entrar a la avioneta cambia `en_avioneta` (False -> True), permitiendo salir
+      del callejon hacia la casilla previa. Una vez afuera con en_avioneta=True, volver
+      a entrar a la avioneta si se detecta como ciclo.
+    - Entrar al deposito cambia `fertilizante` (phi -> 2).
+    - Entrar a un cultivo seco con fertilizante cambia `pendientes` y `fertilizante`.
+    """
+    return (
+        estado.fila,
+        estado.columna,
+        estado.fertilizante,
+        estado.en_avioneta,
+        estado.pendientes,
+    )
+
+
 def es_repetido_en_rama(estado_candidato, camino_de_estados_en_la_rama, mundo=None) -> bool:
-    """True si el candidato repite un estado de la rama (cualquier contenedor con `in`)."""
-    return estado_candidato in camino_de_estados_en_la_rama
+    """True si el candidato repite un estado de la rama (comparando sin combustible)."""
+    clave_candidato = _clave_ciclo(estado_candidato)
+    for estado_previo in camino_de_estados_en_la_rama:
+        clave_previo = _clave_ciclo(estado_previo) if hasattr(estado_previo, "fila") else estado_previo
+        if clave_candidato == clave_previo:
+            return True
+    return False
 
