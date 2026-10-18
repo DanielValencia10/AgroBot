@@ -136,6 +136,20 @@ class TestCiclos(unittest.TestCase):
         de_vuelta = estado((0, 2), fertilizante=2, pendientes=PENDIENTES - {(4, 3)})
         self.assertFalse(ciclos.es_repetido_en_rama(de_vuelta, [en_el_deposito]))
 
+    def test_subir_a_la_avioneta_y_devolverse_es_valido(self):
+        # Al salir del callejon de la avioneta, en_avioneta cambio (False -> True), asi que no es ciclo
+        antes_de_entrar = estado((1, 6), en_avioneta=False, combustible=30)
+        en_la_avioneta = estado((0, 6), en_avioneta=True, combustible=30)
+        saliendo = estado((1, 6), en_avioneta=True, combustible=29)
+        self.assertFalse(ciclos.es_repetido_en_rama(saliendo, [antes_de_entrar, en_la_avioneta]))
+
+    def test_revisitar_casilla_en_avioneta_solo_por_gastar_combustible_es_ciclo(self):
+        # Si ya visitamos (0, 6) montados en avioneta, volver a pisarla solo con menos combustible se descarta
+        en_la_avioneta = estado((0, 6), en_avioneta=True, combustible=30)
+        saliendo = estado((1, 6), en_avioneta=True, combustible=29)
+        reingreso = estado((0, 6), en_avioneta=True, combustible=28)
+        self.assertTrue(ciclos.es_repetido_en_rama(reingreso, [en_la_avioneta, saliendo]))
+
 
 class TestAgroBotProblema(PruebaConMundo):
     def setUp(self):
