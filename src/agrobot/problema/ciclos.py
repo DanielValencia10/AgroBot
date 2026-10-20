@@ -7,41 +7,46 @@ Responsabilidad:
     SI hace:
         - Determinar si un estado candidato repetiria un estado ya presente en el
           camino actual desde la raiz (rama), para que ese sucesor se descarte.
-        - Documentar y aplicar las excepciones en las que SI se permite volver a un
-          estado ya visitado en la rama:
+        - Garantizar las excepciones en las que SI se permite volver a una casilla ya
+          visitada en la rama (no con codigo aparte: salen solas de la definicion de
+          "mismo estado", ver mas abajo):
             - Volver a la casilla donde esta la avioneta (para subirse a ella).
             - Volver a un cultivo seco pendiente teniendo fertilizante disponible
               (phi > 0) para fertilizarlo.
             - Volver al deposito (para recargar fertilizante).
     NO hace:
         - No decide que algoritmo usar ni como recorrer el arbol de busqueda: solo
-          ofrece el criterio de "este sucesor repite estado y no cae en una excepcion".
+          ofrece el criterio de "este sucesor repite un estado de la rama".
         - No calcula costos ni aplica efectos de movimiento.
-Importa de:
-    - modelo.estado (Estado): para comparar estados (posicion, fertilizante,
-      combustible, pendientes) segun el criterio que se defina.
-    - modelo.mundo (Mundo): para identificar si una casilla es el deposito o la
-      posicion de la avioneta (necesario para reconocer las excepciones).
-    - constantes: en caso de necesitar referenciar codigos o capacidades al evaluar
-      las excepciones.
+Importa de:    (nada del proyecto: recibe los estados como parametros).
 Lo importan:
     - problema/agrobot_problema.py (para filtrar sucesores que violan la restriccion
       de ciclos antes de devolverlos a los algoritmos de busqueda).
 Contrato previsto:
     - es_repetido_en_rama(estado_candidato, camino_de_estados_en_la_rama, mundo):
       retorna si el estado candidato debe descartarse por repetir un estado previo en
-      la rama, considerando las excepciones (avioneta, cultivo seco con fertilizante,
-      deposito).
-Decision de equipo (antes PENDIENTE):
-    - "Es el mismo estado" significa igualdad de la tupla completa (f, c, phi, e, k, P),
-      igual que la clave de visitados de la Demo.
-    - Con esa definicion las tres excepciones se cumplen solas: volver a la avioneta, a
-      un cultivo seco con fertilizante o al deposito CAMBIA e/k, P o phi, asi que el
-      estado resultante es distinto y no cuenta como repetido. Solo se descarta un paso
-      que deja TODO igual que un estado anterior de la rama.
+      la rama (cualquier contenedor de Estado que acepte `in`: lista, tupla o conjunto).
+Definicion de ciclo (diapositivas del profesor, Tema 4):
+    - "Evitar ciclos" = evitar que sobre una misma rama se alcance un estado previo.
+Decision de equipo (2026-10-19): el combustible k SE OMITE al comparar estados.
+    - Dos estados se consideran el mismo si coinciden en (f, c, phi, e, P): posicion,
+      fertilizante, si va en avioneta y cultivos pendientes. El combustible k no se mira.
+    - Por que: mientras el robot va en la avioneta cada paso baja k en 1; si k se
+      comparara, volver a una casilla ya pisada en avioneta siempre parecería un estado
+      nuevo y el robot podria ir y venir hasta gastar los 30 movimientos.
+    - Las tres excepciones se cumplen solas: volver a la avioneta, a un cultivo seco con
+      fertilizante o al deposito CAMBIA e, P o phi, asi que no cuenta como repetido.
+    - Consecuencias a tener presentes:
+        * Con la misma posicion, phi y P, "avioneta sin usar" (e=falso, k=30) y "avioneta
+          agotada" (e=falso, k=0) cuentan como el mismo estado. No se pierde ninguna
+          solucion (el estado con avioneta disponible nunca tiene menos opciones), pero
+          no es la tupla completa.
+        * Los nodos expandidos y los caminos de Profundidad dependen de este criterio y
+          difieren de comparar la tupla completa (f, c, phi, e, k, P).
+    - Amplitud y Costo uniforme no usan este filtro (llaman a sucesores sin rama).
 PENDIENTE:
-    - El parametro `mundo` queda en el contrato por si el equipo cambia la comparacion
-      (por ejemplo, solo posicion con excepciones explicitas); hoy no se usa.
+    - El parametro `mundo` queda en el contrato por si el equipo cambia la comparacion;
+      hoy no se usa.
 """
 from __future__ import annotations
 

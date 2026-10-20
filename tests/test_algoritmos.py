@@ -2,7 +2,7 @@
 Archivo:       tests/test_algoritmos.py
 Objetivo:      Verificar los algoritmos de busqueda sobre mundos/Prueba1.txt (robot en
                (4,0), deposito en (0,2), avioneta en (0,6), cultivos en (4,3), (5,3) y
-               (6,8)). Hoy solo esta implementado Amplitud.
+               (6,8)). Estan implementados Amplitud, Costo uniforme y Profundidad.
 Responsabilidad:
     QUE VERIFICA (Amplitud):
         - Que encuentre una solucion valida: el camino de movimientos, aplicado desde el
@@ -16,8 +16,7 @@ Responsabilidad:
         - Que no reporte costo_total (solo Costo uniforme y A*).
         - Que sin solucion devuelva un Resultado que lo indica, sin lanzar error.
         - Que no dependa de modelo/ ni de problema/ (busqueda/ queda aislado).
-    PENDIENTE (cuando se implementen): los mismos chequeos para Costo uniforme,
-    Profundidad, Avara y A* (costo minimo, uso de la heuristica, consistencia del
+    PENDIENTE (cuando se implementen): los mismos chequeos para Avara y A* (costo minimo, uso de la heuristica, consistencia del
     conteo de nodos expandidos).
 Importa de:
     - busqueda.no_informada.amplitud, problema.agrobot_problema, archivos.lector_mundo.

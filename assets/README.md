@@ -1,7 +1,7 @@
 # Assets de AgroBot
 
 Esta carpeta contiene los recursos de arte (sprites) usados por la GUI para
-dibujar la cuadricula y animar el camino solucion. Solo contiene imagenes y dos scripts de ejemplo.
+dibujar la cuadricula y animar el camino solucion. Solo contiene imagenes.
 
 Solo `src/agrobot/gui/cargador_sprites.py` conoce la ruta de esta carpeta;
 ningun otro archivo del proyecto debe leer `assets/` directamente.
@@ -49,5 +49,4 @@ Los tiempos y el orden de los cuadros viven en `src/agrobot/gui/animacion.py`:
 - Helice de la avioneta: cuadros `0 -> 1 -> 2 -> 1` (55 ms), siempre girando.
 - Planta: los 9 cuadros en orden al fertilizarla (130 ms cada uno).
 
-`ejemplo_pygame.py` y `ejemplo_planta_pygame.py` (en `assets/sprites/`) muestran estas
-animaciones por separado; son la referencia visual. Ejecutarlos desde esa carpeta.
+La referencia visual de estas animaciones es la propia aplicacion (`python ejecutar.py`).
