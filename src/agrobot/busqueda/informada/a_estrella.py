@@ -38,3 +38,52 @@ PENDIENTE:
     - Criterio de desempate entre nodos con el mismo valor de f en la cola de
       prioridad (por ejemplo, priorizar mayor g o menor h).
 """
+from __future__ import annotations
+
+import heapq
+import time
+from itertools import count
+
+from ..nodo import Nodo, reconstruir_camino, reconstruir_camino_de_estados
+from ..resultado import Resultado
+
+def buscar_a_estrella(problema, heuristica) -> Resultado:
+    
+    inicio = time.perf_counter()
+    raiz = Nodo(problema.estado_inicial())
+    desempate = count()
+    heur_raiz = heuristica(raiz.estado)
+    frontera = [(heur_raiz, next(desempate), raiz)]   # (f, orden de insercion, nodo)
+    mejor_costo = {raiz.estado: 0.0}            # menor costo conocido de cada estado
+    nodos_expandidos = 0
+
+    while frontera:
+        costo, _, nodo = heapq.heappop(frontera)
+        if costo > mejor_costo[nodo.estado]:
+            continue   # entrada vieja: ya se encontro un camino mas barato a este estado
+        nodos_expandidos += 1
+        if problema.es_meta(nodo.estado):
+            movimientos = reconstruir_camino(nodo)
+            return Resultado(
+                camino_de_movimientos=tuple(movimientos),
+                nodos_expandidos=nodos_expandidos,
+                profundidad_de_la_solucion=len(movimientos),
+                tiempo_de_computo=time.perf_counter() - inicio,
+                costo_total=nodo.costo_acumulado,
+                camino_de_estados=tuple(reconstruir_camino_de_estados(nodo)),
+            )
+        for movimiento, estado, costo_del_paso in problema.sucesores(nodo.estado, ()):
+            nuevo_costo = nodo.costo_acumulado + costo_del_paso
+            if estado in mejor_costo and nuevo_costo >= mejor_costo[estado]:
+                continue
+            mejor_costo[estado] = nuevo_costo
+            hijo = Nodo(estado, nodo, movimiento, nodo.profundidad + 1, nuevo_costo)
+            heapq.heappush(frontera, (nuevo_costo + heuristica(estado), next(desempate), hijo))
+
+    return Resultado(
+        camino_de_movimientos=(),
+        nodos_expandidos=nodos_expandidos,
+        profundidad_de_la_solucion=0,
+        tiempo_de_computo=time.perf_counter() - inicio,
+        solucion_encontrada=False,
+    )
