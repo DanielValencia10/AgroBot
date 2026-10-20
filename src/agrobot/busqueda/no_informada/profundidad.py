@@ -34,9 +34,12 @@ Contrato previsto:
       primera solucion encontrada por la rama explorada (o la indicacion de que no hay
       solucion).
 PENDIENTE:
-    - Si se necesita un limite de profundidad para garantizar terminacion en mundos sin
-      solucion, o si el control de ciclos de problema/ciclos.py es suficiente para
-      garantizar que el arbol de busqueda es finito.
+    - Terminacion: el control de ciclos de problema/ciclos.py SI garantiza que el arbol es
+      finito (cada rama es un camino sin estados repetidos dentro de un espacio de estados
+      finito), asi que no hace falta un limite de profundidad para que termine. Pero NO
+      garantiza que termine pronto: en un mundo sin solucion explora todas las ramas y
+      puede tardar muchisimo (probado: mas de 60 s en un 10x10). Decidir si la interfaz
+      debe poner un tope de tiempo o de nodos para no congelarse.
     - Orden en que se apilan/exploran los hijos de un nodo (afecta cual solucion se
       encuentra primero).
 """

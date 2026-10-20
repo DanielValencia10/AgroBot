@@ -9,9 +9,10 @@ resuelve con cinco algoritmos de busqueda: tres no informados (Amplitud,
 Costo uniforme, Profundidad evitando ciclos) y dos informados (Avara, A*).
 
 Estado actual: funcionan la lectura y validacion de mundos, el problema (operadores,
-costos y control de ciclos), la busqueda en **Amplitud** y toda la interfaz (bienvenida,
-seleccion, animacion del camino, arbol de exploracion y reporte). Costo uniforme,
-Profundidad, Avara y A* aun no estan implementados: al elegirlos la aplicacion avisa.
+costos y control de ciclos), la busqueda en **Amplitud**, **Costo uniforme** y
+**Profundidad evitando ciclos** y **Avara** (con su heuristica), y toda la interfaz
+(bienvenida, seleccion, animacion del camino, arbol de exploracion y reporte). A* aun no
+esta implementado: al elegirlo la aplicacion avisa.
 
 ## Instalacion del entorno
 
@@ -51,7 +52,7 @@ reinicia, `Arriba`/`Abajo` cambian la velocidad y `Esc` vuelve a la seleccion.
 Pruebas (desde la raiz, con el entorno activo):
 
 ```
-python -m unittest tests.test_lector_mundo tests.test_operadores tests.test_algoritmos tests.test_sprites tests.test_panel_mundo tests.test_arbol_exploracion tests.test_animacion tests.test_flujo
+python -m unittest tests.test_lector_mundo tests.test_operadores tests.test_algoritmos tests.test_sprites tests.test_panel_mundo tests.test_arbol_exploracion tests.test_seleccion_nodos tests.test_animacion tests.test_flujo
 ```
 
 Las tipografias Pixelify Sans y DM Sans (gratuitas, de Google Fonts) van en
@@ -160,6 +161,17 @@ Resueltas (quedaron documentadas en la cabecera del archivo que las aplica):
 - El estado inicial se construye en `modelo/estado.py` y el robot arranca con 0 de
   fertilizante.
 - Sucesores: `camino_de_la_rama` es cualquier contenedor de estados (`problema/agrobot_problema.py`).
+- Ciclos: un sucesor se descarta si repite un estado de su rama comparando (f, c, phi, e, P);
+  el combustible k se omite a proposito (`problema/ciclos.py`).
+- Avioneta: un solo uso. Sube automaticamente al pisar su casilla sin usar (k = 30) y nunca
+  vuelve a subir despues de agotarse (`problema/operadores.py`).
+- Profundidad: apila los sucesores al reves para explorar primero el orden arriba, abajo,
+  izquierda, derecha; solo evita ciclos dentro de la rama. Termina siempre (el espacio de
+  estados es finito) pero puede tardar mucho en mundos sin solucion
+  (`busqueda/no_informada/profundidad.py`).
+- Avara: cola de prioridad por h(n) con desempate por orden de insercion; evita ciclos por
+  rama como Profundidad. La heuristica se crea con el deposito del mundo
+  (`crear_heuristica(deposito)`) y `gui/panel_control.py` se la pasa a `buscar_avara`.
 - Amplitud: desempate por orden de los sucesores, conjunto de estados generados global y
   la meta tambien cuenta como nodo expandido (`busqueda/no_informada/amplitud.py`).
 - Libreria de GUI: pygame-ce. Velocidad de la animacion: 400 ms por casilla, con pausa,
@@ -168,12 +180,10 @@ Resueltas (quedaron documentadas en la cabecera del archivo que las aplica):
 
 Pendientes (los algoritmos que faltan):
 
-- **Criterios de desempate** de Costo uniforme, Profundidad, Avara y A*:
-  `busqueda/no_informada/costo_uniforme.py`, `busqueda/no_informada/profundidad.py`,
-  `busqueda/informada/avara.py` y `busqueda/informada/a_estrella.py`.
-- **Orden de expansion y limite de profundidad** de Profundidad (DFS):
-  `busqueda/no_informada/profundidad.py`.
-- **Definicion de la heuristica** (con su justificacion de admisibilidad para el informe):
-  `busqueda/informada/heuristica.py`.
+- **A***: `busqueda/informada/a_estrella.py` (criterio de desempate entre nodos con el mismo f).
+  Puede reutilizar la heuristica de `busqueda/informada/heuristica.py`, que es admisible.
+- **Justificacion de admisibilidad de la heuristica** para el informe: h = 0,5 x (distancia
+  Manhattan al primer cultivo, pasando por el deposito si no hay fertilizante, + cultivos
+  pendientes - 1). 0,5 es el costo minimo de un paso, asi que h nunca sobreestima.
 - Cada algoritmo nuevo debe agregarse a `ALGORITMOS_DISPONIBLES` en
   `gui/panel_control.py` para que la interfaz pueda ejecutarlo.
