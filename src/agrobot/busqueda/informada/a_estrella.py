@@ -58,8 +58,8 @@ def buscar_a_estrella(problema, heuristica) -> Resultado:
     nodos_expandidos = 0
 
     while frontera:
-        costo, _, nodo = heapq.heappop(frontera)
-        if costo > mejor_costo[nodo.estado]:
+        _, _, nodo = heapq.heappop(frontera)
+        if nodo.costo_acumulado > mejor_costo[nodo.estado]:
             continue   # entrada vieja: ya se encontro un camino mas barato a este estado
         nodos_expandidos += 1
         if problema.es_meta(nodo.estado):
@@ -72,7 +72,7 @@ def buscar_a_estrella(problema, heuristica) -> Resultado:
                 costo_total=nodo.costo_acumulado,
                 camino_de_estados=tuple(reconstruir_camino_de_estados(nodo)),
             )
-        for movimiento, estado, costo_del_paso in problema.sucesores(nodo.estado, ()):
+        for movimiento, estado, costo_del_paso in problema.sucesores(nodo.estado, reconstruir_camino_de_estados(nodo)):
             nuevo_costo = nodo.costo_acumulado + costo_del_paso
             if estado in mejor_costo and nuevo_costo >= mejor_costo[estado]:
                 continue

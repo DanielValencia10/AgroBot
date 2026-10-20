@@ -46,6 +46,7 @@ from ..busqueda.no_informada.amplitud import buscar_amplitud
 from ..busqueda.no_informada.costo_uniforme import buscar_costo_uniforme
 from ..busqueda.no_informada.profundidad import buscar_profundidad
 from ..busqueda.informada.avara import buscar_avara
+from ..busqueda.informada.a_estrella import buscar_a_estrella
 from ..busqueda.informada.heuristica import crear_heuristica
 from ..problema.agrobot_problema import AgroBotProblema
 from .catalogo_algoritmos import Algoritmo
@@ -54,11 +55,15 @@ def _avara(problema):
     """Arma la heuristica con el deposito del mundo y corre Avara."""
     return buscar_avara(problema, crear_heuristica(problema.mundo.deposito))
 
+def _a_estrella (problema):
+    return buscar_a_estrella(problema, crear_heuristica(problema.mundo.deposito))
+
 ALGORITMOS_DISPONIBLES = {
     Algoritmo.AMPLITUD: buscar_amplitud,
     Algoritmo.COSTO_UNIFORME: buscar_costo_uniforme,
     Algoritmo.PROFUNDIDAD: buscar_profundidad,
     Algoritmo.AVARA: _avara,
+    Algoritmo.A_ESTRELLA: _a_estrella
 }
 
 
