@@ -4,8 +4,9 @@ Objetivo:      Verificar la integracion de la aplicacion: panel_control (selecci
                busqueda), ventana_principal, pantalla_aviso y el flujo de main.py.
 Responsabilidad:
     QUE VERIFICA:
-        - ejecutar_seleccion resuelve Prueba1 con Amplitud, rechaza un algoritmo sin
-          implementar (AlgoritmoNoDisponible) y un mundo invalido (ErrorMundo).
+        - ejecutar_seleccion resuelve Prueba1 con Amplitud y con A* (costo 25, el mismo
+          de Costo uniforme), rechaza un algoritmo que no este registrado
+          (AlgoritmoNoDisponible) y un mundo invalido (ErrorMundo).
         - VentanaPrincipal: Espacio pausa, flecha derecha da un paso, R reinicia (y
           rehace el arbol), Esc vuelve, cerrar la ventana sale, los botones del mouse
           hacen lo mismo, y el arbol crece a medida que el robot llega a casillas.
@@ -31,7 +32,7 @@ import pygame  # noqa: E402
 
 from agrobot import main  # noqa: E402
 from agrobot.archivos.lector_mundo import ErrorMundo  # noqa: E402
-from agrobot.gui import pantalla_aviso, pantalla_resultados, ventana_principal  # noqa: E402
+from agrobot.gui import panel_control, pantalla_aviso, pantalla_resultados, ventana_principal  # noqa: E402
 from agrobot.gui.catalogo_algoritmos import Algoritmo  # noqa: E402
 from agrobot.gui.panel_control import AlgoritmoNoDisponible, ejecutar_seleccion  # noqa: E402
 from agrobot.gui.pantalla_seleccion import SeleccionInicio  # noqa: E402
@@ -55,9 +56,22 @@ class TestPanelControl(unittest.TestCase):
         self.assertEqual(ejecucion.resultado.profundidad_de_la_solucion, 30)
         self.assertTrue(ejecucion.problema.es_meta(ejecucion.resultado.camino_de_estados[-1]))
 
-    def test_algoritmo_sin_implementar(self):
-        with self.assertRaises(AlgoritmoNoDisponible) as contexto:
-            ejecutar_seleccion(SeleccionInicio(PRUEBA1, Algoritmo.A_ESTRELLA))
+    def test_a_estrella_sobre_prueba1(self):
+        ejecucion = ejecutar_seleccion(SeleccionInicio(PRUEBA1, Algoritmo.A_ESTRELLA))
+        self.assertEqual(ejecucion.algoritmo, Algoritmo.A_ESTRELLA)
+        self.assertEqual(ejecucion.resultado.costo_total, 25.0)  # igual que Costo uniforme
+        self.assertTrue(ejecucion.problema.es_meta(ejecucion.resultado.camino_de_estados[-1]))
+
+    def test_todos_los_algoritmos_estan_registrados(self):
+        for algoritmo in Algoritmo:
+            self.assertIn(algoritmo, panel_control.ALGORITMOS_DISPONIBLES)
+
+    def test_algoritmo_no_registrado(self):
+        # Se quita A* del registro solo durante la prueba (mock.patch.dict lo restaura).
+        with mock.patch.dict(panel_control.ALGORITMOS_DISPONIBLES):
+            del panel_control.ALGORITMOS_DISPONIBLES[Algoritmo.A_ESTRELLA]
+            with self.assertRaises(AlgoritmoNoDisponible) as contexto:
+                ejecutar_seleccion(SeleccionInicio(PRUEBA1, Algoritmo.A_ESTRELLA))
         self.assertEqual(contexto.exception.algoritmo, Algoritmo.A_ESTRELLA)
         self.assertIsInstance(contexto.exception, NotImplementedError)
 

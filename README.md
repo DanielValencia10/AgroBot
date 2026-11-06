@@ -10,9 +10,8 @@ Costo uniforme, Profundidad evitando ciclos) y dos informados (Avara, A*).
 
 Estado actual: funcionan la lectura y validacion de mundos, el problema (operadores,
 costos y control de ciclos), la busqueda en **Amplitud**, **Costo uniforme** y
-**Profundidad evitando ciclos** y **Avara** (con su heuristica), y toda la interfaz
-(bienvenida, seleccion, animacion del camino, arbol de exploracion y reporte). A* aun no
-esta implementado: al elegirlo la aplicacion avisa.
+**Profundidad evitando ciclos**, **Avara** y **A*** (ambos con su heuristica), y toda la
+interfaz (bienvenida, seleccion, animacion del camino, arbol de exploracion y reporte).
 
 ## Instalacion del entorno
 
@@ -177,13 +176,15 @@ Resueltas (quedaron documentadas en la cabecera del archivo que las aplica):
 - Libreria de GUI: pygame-ce. Velocidad de la animacion: 400 ms por casilla, con pausa,
   paso a paso y cambio de velocidad (`gui/animacion.py`).
 - Sprites de 64 x 64 px cargados por `gui/cargador_sprites.py`. Pruebas con `unittest`.
-
-Pendientes (los algoritmos que faltan):
-
-- **A***: `busqueda/informada/a_estrella.py` (criterio de desempate entre nodos con el mismo f).
-  Puede reutilizar la heuristica de `busqueda/informada/heuristica.py`, que es admisible.
-- **Justificacion de admisibilidad de la heuristica** para el informe: h = 0,5 x (distancia
-  Manhattan al primer cultivo, pasando por el deposito si no hay fertilizante, + cultivos
-  pendientes - 1). 0,5 es el costo minimo de un paso, asi que h nunca sobreestima.
+- A*: cola de prioridad por f(n) = g(n) + h(n), con desempate por orden de insercion. Guarda
+  el menor costo conocido de cada estado y descarta las entradas viejas, igual que Costo
+  uniforme; ademas evita ciclos por rama (le pasa a `sucesores` el camino de la rama). Usa la
+  misma heuristica que Avara (`busqueda/informada/a_estrella.py`).
+- Verificacion hecha: en Prueba1 y Prueba2 A* da el mismo costo que Costo uniforme (25 y 18) y
+  expande muchos menos nodos (747 vs 3380 y 284 vs 1597); lo mismo en 60 mundos aleatorios
+  (nunca un costo mayor, nunca mas nodos que Costo uniforme).
+- Admisibilidad de la heuristica: h = 0,5 x (distancia Manhattan al primer cultivo, pasando
+  por el deposito si no hay fertilizante, + cultivos pendientes - 1). 0,5 es el costo minimo
+  de un paso, asi que h nunca sobreestima (`busqueda/informada/heuristica.py`).
 - Cada algoritmo nuevo debe agregarse a `ALGORITMOS_DISPONIBLES` en
   `gui/panel_control.py` para que la interfaz pueda ejecutarlo.

@@ -44,11 +44,12 @@ Contrato:
       numero >= 0 (la que devuelve crear_heuristica). Retorna un Resultado con la
       solucion encontrada guiada por la heuristica (o la indicacion de que no hay
       solucion).
-Decision de equipo (antes PENDIENTE):
+Decisiones de equipo (antes PENDIENTE):
     - Desempate entre nodos con el mismo h: orden de insercion en la cola.
-PENDIENTE:
-    - Confirmar con el profesor si Avara debe evitar ciclos por rama (como Profundidad)
-      o con un conjunto global de estados generados (como Amplitud).
+    - Ciclos: por rama, como Profundidad (el profesor indico que puede ser por ramas).
+      Las diapositivas (Tema 5) dicen que Avara es incompleta porque "puede caer en
+      ciclos"; el enunciado pide evitar ciclos en todos los algoritmos, por eso se aplica
+      el control por rama.
 """
 
 from __future__ import annotations

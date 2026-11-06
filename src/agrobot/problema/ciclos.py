@@ -29,6 +29,8 @@ Contrato previsto:
 Definicion de ciclo (diapositivas del profesor, Tema 4):
     - "Evitar ciclos" = evitar que sobre una misma rama se alcance un estado previo.
 Decision de equipo (2026-10-19): el combustible k SE OMITE al comparar estados.
+    - El profesor confirmo que comparar con o sin el combustible es valido (ambas formas
+      se aceptan).
     - Dos estados se consideran el mismo si coinciden en (f, c, phi, e, P): posicion,
       fertilizante, si va en avioneta y cultivos pendientes. El combustible k no se mira.
     - Por que: mientras el robot va en la avioneta cada paso baja k en 1; si k se
